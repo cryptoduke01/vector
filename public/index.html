@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vector</title>
+    <link id="favicon" rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.min.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="welcomeModal" class="modal-backdrop">
+      <div class="modal">
+        <div class="brand-logo-modal" aria-hidden="true"></div>
+        <h2>Welcome to Vector</h2>
+        <p class="modal-lead">
+          Autonomous trading agent for the Bitget Hackathon. One button runs the full loop: live data, signal votes, Qwen decision, audit log.
+        </p>
+        <div class="modal-block">
+          <h3>Live data</h3>
+          <p>Bitget prices, Exa news, DexScreener on-chain, Qwen reasoning. Real API calls every cycle.</p>
+        </div>
+        <div class="modal-block">
+          <h3>Simulated only</h3>
+          <ul>
+            <li>Paper wallet ($1,000 start)</li>
+            <li>Orders skipped in dry run</li>
+          </ul>
+        </div>
+        <div class="modal-actions">
+          <button id="skipWelcome" class="btn btn-ghost" type="button">Skip</button>
+          <button id="startBtn" class="btn btn-primary" type="button">Open dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="overlay-panel">
+        <div class="spinner"></div>
+        <div id="overlayStep" class="overlay-title">Starting cycle</div>
+        <div id="overlayHint" class="overlay-sub">Connecting to Bitget</div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <div class="app-shell">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="sidebar-brand-text">
+            <strong>Vector</strong>
+            <span>Trading Agent</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <div class="nav-group-label">Main</div>
+          <button class="nav-item active" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </button>
+          <button class="nav-item" type="button" id="navSignals">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Signals
+            <span class="nav-badge">4</span>
+          </button>
+          <button class="nav-item" type="button" id="navAutopilot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Autopilot
+          </button>
+          <button class="nav-item" type="button" id="navAgent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v1h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2V6a4 4 0 0 1 4-4z"/></svg>
+            Agent
+          </button>
+          <button class="nav-item" type="button" id="navJournal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            Journal
+          </button>
+
+          <div class="nav-group-label">System</div>
+          <button class="nav-item" type="button" id="navSettings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            Settings
+          </button>
+          <button class="nav-item" type="button" id="helpBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Help
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="avatar">BH</div>
+          <div>
+            <strong>Bitget Hackathon</strong>
+            <span>Trading Agent track</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="menuBtn" class="menu-btn" type="button" aria-label="Open menu">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <h1>Dashboard</h1>
+          </div>
+          <div class="topbar-right">
+            <button id="themeBtn" class="btn btn-ghost btn-icon" type="button" aria-label="Toggle theme">
+              <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <div class="select-wrap">
+              <select id="profileSelect" title="Signal profile"></select>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <span id="modeBadge" class="badge badge-dry">Dry run</span>
+            <span id="conflictBadge" class="badge badge-off" style="display:none">Split</span>
+            <button id="runBtn" class="btn btn-primary" type="button">Run cycle</button>
+          </div>
+        </header>
+
+        <div class="content">
+          <div id="livePrice" class="ticker">
+            <span class="dot"></span>
+            <span>Waiting for first cycle...</span>
+          </div>
+
+          <div id="error" class="error-banner"></div>
+
+          <div class="stats-row">
+            <div class="card" id="cardSignals">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Active signals</h3>
+                  <div class="card-sub">Four channels voting</div>
+                </div>
+                <span class="badge badge-live">Live</span>
+              </div>
+              <div id="signalsBody">
+                <div class="skeleton skeleton-lg"></div>
+                <div class="skeleton skeleton-sm"></div>
+              </div>
+            </div>
+
+            <div class="card" id="cardDecision">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">AI decision</h3>
+                  <div class="card-sub">Final trade call</div>
+                </div>
+                <span class="badge badge-ai">AI</span>
+              </div>
+              <div id="decisionBody">
+                <div class="skeleton skeleton-lg"></div>
+                <div class="skeleton skeleton-sm"></div>
+              </div>
+            </div>
+
+            <div class="card" id="cardPortfolio">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Paper wallet</h3>
+                  <div class="card-sub">Simulated balance</div>
+                </div>
+                <span class="badge badge-sim">Sim</span>
+              </div>
+              <div id="portfolioBody">
+                <div class="skeleton skeleton-lg"></div>
+                <div class="skeleton skeleton-sm"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="agentPanel" class="agent-panel ready">
+            <div class="agent-inner">
+              <div class="agent-header">
+                <div class="agent-orb" id="agentOrb">
+                  <img src="/assets/agent-icon.svg" alt="" width="44" height="44" />
+                </div>
+                <div class="agent-title">
+                  <strong>Vector Agent</strong>
+                  <div class="agent-status">
+                    <span class="status-dot"></span>
+                    <span id="agentStatus">Idle · waiting for cycle</span>
+                  </div>
+                </div>
+                <span id="agentModel" class="agent-model">qwen3.6-flash</span>
+              </div>
+              <div class="agent-verdict">
+                <div>
+                  <div class="agent-verdict-label">Verdict</div>
+                  <div id="agentVerdict" class="agent-verdict-action action-hold">HOLD</div>
+                </div>
+                <div id="agentVerdictMeta" class="agent-verdict-meta">Run a cycle to get an agent decision</div>
+              </div>
+              <div id="reasoning" class="agent-output">Agent reasoning will appear here after each cycle. The model reads all four signal votes, reconciles conflicts, and explains the trade call in plain language.</div>
+            </div>
+          </div>
+
+          <div class="split-row charts-row">
+            <div class="card chart-card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Portfolio equity</h3>
+                  <div class="card-sub">Paper wallet over time</div>
+                </div>
+                <span class="badge badge-sim">Sim</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="equityChart" aria-label="Equity chart"></canvas>
+              </div>
+            </div>
+            <div class="card chart-card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Cycle activity</h3>
+                  <div class="card-sub">Decisions per run</div>
+                </div>
+                <span class="badge badge-live">Live</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="activityChart" aria-label="Activity chart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card chart-card-wide">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Signal scores</h3>
+                <div class="card-sub">Latest tribunal channel weights</div>
+              </div>
+              <span class="badge badge-live">Live</span>
+            </div>
+            <div class="chart-wrap chart-wrap-tall">
+              <canvas id="signalsChart" aria-label="Signal scores chart"></canvas>
+            </div>
+          </div>
+
+          <div class="split-row">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Cycle pipeline</h3>
+                  <div class="card-sub">What happens each run</div>
+                </div>
+              </div>
+              <div id="pipeline" class="pipeline-list"></div>
+            </div>
+
+            <div class="card" id="journalCard">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Recent cycles</h3>
+                  <div class="card-sub">Last 8 runs</div>
+                </div>
+              </div>
+              <div class="tab-row">
+                <button class="tab active" type="button">All</button>
+                <button class="tab" type="button" disabled>Errors</button>
+              </div>
+              <div id="journal" class="journal-list"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Signal tribunal</h3>
+                <div id="profileMeta" class="card-sub">Channel votes and weights</div>
+              </div>
+              <span class="badge badge-live">Live</span>
+            </div>
+            <div id="weightBars" class="weight-bar"></div>
+            <div id="tribunal"></div>
+          </div>
+
+          <div class="section-divider">
+            <span>Operations</span>
+          </div>
+
+          <div id="autopilotSection" class="card autopilot-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Autopilot</h3>
+                <div class="card-sub">Run the agent on a loop and watch live</div>
+              </div>
+              <span id="autopilotBadge" class="badge badge-off">Stopped</span>
+            </div>
+            <div class="autopilot-stats">
+              <div class="autopilot-stat">
+                <span class="label">Status</span>
+                <strong id="autopilotPhase">Idle</strong>
+              </div>
+              <div class="autopilot-stat">
+                <span class="label">Cycles</span>
+                <strong id="autopilotCycles">0</strong>
+              </div>
+              <div class="autopilot-stat">
+                <span class="label">Next run</span>
+                <strong id="autopilotNext">—</strong>
+              </div>
+              <div class="autopilot-stat">
+                <span class="label">Last run</span>
+                <strong id="autopilotLast">—</strong>
+              </div>
+            </div>
+            <div class="autopilot-actions">
+              <button id="autopilotStartBtn" class="btn btn-primary" type="button">Start autopilot</button>
+              <button id="autopilotStopBtn" class="btn btn-ghost" type="button" disabled>Stop</button>
+            </div>
+            <div class="live-log-wrap">
+              <div class="live-log-head">Live activity log</div>
+              <div id="autopilotLog" class="live-log">
+                <p class="stat-meta">Start autopilot to see cycles logged here in real time.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="settingsSection" class="card settings-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Agent settings</h3>
+                <div class="card-sub">Saved in the app. Stop autopilot before editing.</div>
+              </div>
+            </div>
+            <form id="settingsForm" class="settings-form">
+              <label class="field">
+                <span>Symbol</span>
+                <input id="settingSymbol" type="text" value="BTCUSDT" />
+              </label>
+              <label class="field">
+                <span>Cycle interval (minutes)</span>
+                <input id="settingInterval" type="number" min="1" max="60" value="5" />
+              </label>
+              <label class="field">
+                <span>Max notional (USDT)</span>
+                <input id="settingNotional" type="number" min="1" max="10000" value="100" />
+              </label>
+              <label class="field">
+                <span>Max leverage</span>
+                <input id="settingLeverage" type="number" min="1" max="125" value="5" />
+              </label>
+              <label class="field toggle-field">
+                <span>Dry run (paper only, no real orders)</span>
+                <input id="settingDryRun" type="checkbox" checked />
+              </label>
+              <p id="settingsHint" class="settings-hint">API keys for live trading stay in server .env only.</p>
+              <button id="saveSettingsBtn" class="btn btn-primary" type="submit">Save settings</button>
+            </form>
+          </div>
+
+          <div id="sources" class="sources"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
