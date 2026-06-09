@@ -5,8 +5,26 @@ import { env } from "./env.js";
 
 const SETTINGS_PATH = path.resolve(process.cwd(), "data", "settings.json");
 
+/** Bitget USDT-margined perpetuals commonly used in the hackathon demo */
+export const TRADING_PAIRS = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "SOLUSDT",
+  "BNBUSDT",
+  "XRPUSDT",
+  "DOGEUSDT",
+  "AVAXUSDT",
+  "LINKUSDT",
+] as const;
+
 export const agentSettingsSchema = z.object({
-  symbol: z.string().min(1).default("BTCUSDT"),
+  symbol: z
+    .string()
+    .min(1)
+    .refine((s) => TRADING_PAIRS.includes(s as (typeof TRADING_PAIRS)[number]), {
+      message: `Symbol must be one of: ${TRADING_PAIRS.join(", ")}`,
+    })
+    .default("BTCUSDT"),
   dryRun: z.boolean().default(true),
   intervalMs: z.number().int().min(30_000).max(3_600_000).default(300_000),
   maxNotionalUsdt: z.number().positive().max(10_000).default(100),

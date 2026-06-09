@@ -20,6 +20,7 @@ import {
   agentSettingsSchema,
   getSettings,
   initSettings,
+  TRADING_PAIRS,
   updateSettings,
 } from "../config/settings.js";
 import { getPaperPortfolio } from "../portfolio/paper.js";
@@ -112,6 +113,7 @@ app.get("/api/settings", async (_req, res) => {
   const settings = await getSettings();
   res.json({
     settings,
+    tradingPairs: TRADING_PAIRS,
     hasBitgetAuth,
     envLocked: {
       llm: hasLlm,

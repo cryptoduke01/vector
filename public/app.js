@@ -445,25 +445,36 @@ function positionLadderHtml(position, marketPrice) {
   const displayMove = Math.max(-25, Math.min(25, movePct));
   const entryLeft = 50;
   const currentLeft = Math.max(8, Math.min(92, entryLeft + displayMove * 1.6));
+  const overlapped = Math.abs(currentLeft - entryLeft) < 4;
   const sideCls = position.side === "long" ? "long" : "short";
   const unrealized =
     position.side === "long"
       ? position.notionalUsdt * ((current - entry) / entry)
       : position.notionalUsdt * ((entry - current) / entry);
   const pnlCls = unrealized >= 0 ? "pnl-pos" : "pnl-neg";
+  const fmt = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+  const markers = overlapped
+    ? `
+        <div class="ladder-marker combined ${sideCls}" style="left:${entryLeft}%">
+          <span class="marker-dot"></span>
+          <span class="marker-label">Entry & now $${fmt(entry)}</span>
+        </div>`
+    : `
+        <div class="ladder-marker entry" style="left:${entryLeft}%">
+          <span class="marker-dot"></span>
+          <span class="marker-label">Entry $${fmt(entry)}</span>
+        </div>
+        <div class="ladder-marker current ${pnlCls}" style="left:${currentLeft}%">
+          <span class="marker-dot"></span>
+          <span class="marker-label">Now $${fmt(current)}</span>
+        </div>`;
 
   return `
     <div class="position-viz position-open ${sideCls}">
       <div class="position-ladder">
         <div class="ladder-track ${sideCls}"></div>
-        <div class="ladder-marker entry" style="left:${entryLeft}%">
-          <span class="marker-dot"></span>
-          <span class="marker-label">Entry $${entry.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-        </div>
-        <div class="ladder-marker current ${pnlCls}" style="left:${currentLeft}%">
-          <span class="marker-dot"></span>
-          <span class="marker-label">Now $${current.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-        </div>
+        ${markers}
       </div>
       <div class="position-caption">
         <span class="position-side ${sideCls}">${position.side.toUpperCase()}</span>
@@ -1100,7 +1111,7 @@ els.settingsForm.addEventListener("submit", async (e) => {
   els.saveSettingsBtn.disabled = true;
   try {
     const body = {
-      symbol: els.settingSymbol.value.trim().toUpperCase(),
+      symbol: els.settingSymbol.value,
       intervalMs: Number(els.settingInterval.value) * 60_000,
       maxNotionalUsdt: Number(els.settingNotional.value),
       maxLeverage: Number(els.settingLeverage.value),
