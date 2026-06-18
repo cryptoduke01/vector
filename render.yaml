@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install -g pnpm@10 && pnpm install --frozen-lockfile && pnpm typecheck
-    startCommand: npm run api
+    buildCommand: npx --yes pnpm@10.6.5 install --frozen-lockfile && npx --yes pnpm@10.6.5 typecheck
+    startCommand: npx tsx src/api/server.ts
     healthCheckPath: /health
     autoDeploy: true
     envVars:

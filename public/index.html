@@ -118,14 +118,15 @@
             <button id="themeBtn" class="btn btn-ghost btn-icon" type="button" aria-label="Toggle theme">
               <svg id="themeIconSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             </button>
-            <div class="select-wrap select-wrap-labeled" title="How the four signal channels are weighted">
-              <span class="select-label">Strategy</span>
-              <select id="profileSelect" aria-label="Signal strategy profile"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            <div class="toolbar-actions">
+              <div class="select-wrap" title="Signal strategy profile">
+                <select id="profileSelect" aria-label="Strategy profile"></select>
+                <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <span id="modeBadge" class="badge badge-dry">Dry run</span>
+              <span id="conflictBadge" class="badge badge-off" style="display:none">Split</span>
+              <button id="runBtn" class="btn btn-primary btn-run" type="button">Run cycle</button>
             </div>
-            <span id="modeBadge" class="badge badge-dry">Dry run</span>
-            <span id="conflictBadge" class="badge badge-off" style="display:none">Split</span>
-            <button id="runBtn" class="btn btn-primary" type="button">Run cycle</button>
           </div>
         </header>
 
@@ -185,7 +186,7 @@
             <div class="agent-inner">
               <div class="agent-header">
                 <div class="agent-orb" id="agentOrb">
-                  <img src="/assets/agent-icon.svg" alt="" width="44" height="44" />
+                  <img src="/assets/agent-icon.svg" alt="" width="36" height="36" />
                 </div>
                 <div class="agent-title">
                   <strong>Vector Agent</strong>
@@ -196,12 +197,28 @@
                 </div>
                 <span id="agentModel" class="agent-model">qwen3.6-flash</span>
               </div>
-              <div class="agent-verdict">
-                <div>
-                  <div class="agent-verdict-label">Verdict</div>
-                  <div id="agentVerdict" class="agent-verdict-action action-hold">HOLD</div>
+              <div class="agent-verdict" id="agentVerdictWrap">
+                <div class="agent-verdict-core">
+                  <div class="agent-orb agent-orb-lg" id="agentOrbDeliberate" aria-hidden="true">
+                    <div class="robot-face">
+                      <span class="robot-eye"></span>
+                      <span class="robot-eye"></span>
+                    </div>
+                    <div class="robot-scan"></div>
+                  </div>
+                  <div>
+                    <div class="agent-verdict-label">Verdict</div>
+                    <div id="agentVerdict" class="agent-verdict-action action-hold">HOLD</div>
+                  </div>
                 </div>
                 <div id="agentVerdictMeta" class="agent-verdict-meta">Run a cycle to get an agent decision</div>
+              </div>
+              <div class="tribunal-jury-wrap">
+                <div class="tribunal-jury-head">
+                  <span class="agent-block-label">Signal tribunal</span>
+                  <span class="tribunal-jury-sub">4 channels vote before Qwen decides</span>
+                </div>
+                <div id="tribunalJury" class="tribunal-jury"></div>
               </div>
               <div class="agent-steps" id="agentSteps">
                 <span class="agent-step" data-step="memory">Memory</span>

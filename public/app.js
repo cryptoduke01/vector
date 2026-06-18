@@ -9,6 +9,8 @@ const els = {
   reasoning: document.getElementById("reasoning"),
   agentPanel: document.getElementById("agentPanel"),
   agentOrb: document.getElementById("agentOrb"),
+  agentVerdictWrap: document.getElementById("agentVerdictWrap"),
+  tribunalJury: document.getElementById("tribunalJury"),
   agentStatus: document.getElementById("agentStatus"),
   agentVerdict: document.getElementById("agentVerdict"),
   agentVerdictMeta: document.getElementById("agentVerdictMeta"),
@@ -75,13 +77,22 @@ let lastChartData = { portfolio: null, cycles: [], latest: null, maxNotionalUsdt
 let hasBitgetAuth = false;
 
 const CYCLE_STEPS = [
-  { label: "Read live market data", hint: "Bitget BTC price, candles, funding", pct: 15 },
-  { label: "Fetch news headlines", hint: "Exa search, last 24 hours", pct: 30 },
-  { label: "Scan on-chain activity", hint: "DexScreener Solana DEX", pct: 45 },
-  { label: "Run signal tribunal", hint: "Four channels vote", pct: 58 },
-  { label: "Qwen decides", hint: "Usually 30 to 50 seconds", pct: 85 },
-  { label: "Write audit log", hint: "Journal and paper wallet", pct: 100 },
+  { label: "Read live market data", hint: "Bitget BTC price, candles, funding", pct: 15, agentStep: "perceive" },
+  { label: "Fetch news headlines", hint: "Exa search, last 24 hours", pct: 30, agentStep: "perceive" },
+  { label: "Scan on-chain activity", hint: "DexScreener Solana DEX", pct: 45, agentStep: "memory" },
+  { label: "Run signal tribunal", hint: "Four channels vote", pct: 58, agentStep: "tribunal" },
+  { label: "Qwen decides", hint: "Usually 30 to 50 seconds", pct: 85, agentStep: "plan" },
+  { label: "Write audit log", hint: "Journal and paper wallet", pct: 100, agentStep: "act" },
 ];
+
+const TRIBUNAL_JURORS = [
+  { key: "technical", label: "Technical", short: "TA" },
+  { key: "funding", label: "Funding", short: "FD" },
+  { key: "news", label: "News", short: "NW" },
+  { key: "onchain", label: "On-chain", short: "OC" },
+];
+
+let juryAnimTimer = null;
 
 function voteClass(v) {
   return `vote-${v}`;
@@ -139,6 +150,7 @@ function renderEmptyDashboard() {
   );
   renderPortfolioCard(null, null);
   renderTribunal(null);
+  renderTribunalJury(null);
   renderJournal([]);
   renderCharts(null, [], null);
   renderAutopilot({
@@ -217,6 +229,52 @@ function closeSidebar() {
   els.sidebarBackdrop.classList.remove("open");
 }
 
+function setDeliberating(on) {
+  els.agentVerdictWrap?.classList.toggle("deliberating", on);
+  if (on) {
+    els.agentVerdict.textContent = "···";
+    els.agentVerdict.className = "agent-verdict-action deliberating";
+    els.agentVerdictMeta.textContent = "Agent deliberating — reading tribunal votes…";
+  }
+}
+
+function stopJuryAnimation() {
+  if (juryAnimTimer) clearTimeout(juryAnimTimer);
+  juryAnimTimer = null;
+}
+
+function renderTribunalJury(tribunal, options = {}) {
+  if (!els.tribunalJury) return;
+
+  els.tribunalJury.innerHTML = TRIBUNAL_JURORS.map((juror, index) => {
+    const channel = tribunal?.channels?.find((c) => c.key === juror.key);
+    const vote = channel?.vote ?? "neutral";
+    const active = options.activeIndex === index;
+    const pending = options.deliberating && !channel;
+
+    return `
+      <div class="juror ${voteClass(vote)} ${active ? "juror-active" : ""} ${pending ? "juror-pending" : ""}" data-juror="${juror.key}">
+        <div class="juror-avatar">${juror.short}</div>
+        <div class="juror-name">${juror.label}</div>
+        <div class="juror-vote">${channel ? vote : "…"}</div>
+        ${channel ? `<div class="juror-score">${channel.score > 0 ? "+" : ""}${channel.score}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function startJuryDeliberation() {
+  stopJuryAnimation();
+  let index = 0;
+
+  const tick = () => {
+    renderTribunalJury(null, { deliberating: true, activeIndex: index });
+    index = (index + 1) % TRIBUNAL_JURORS.length;
+    juryAnimTimer = setTimeout(tick, 650);
+  };
+
+  tick();
+}
+
 function setAgentState(state, text) {
   els.agentPanel.classList.remove("thinking", "ready", "idle");
   els.agentPanel.classList.add(state);
@@ -237,7 +295,8 @@ function renderAgent(decision, execution, reasoningText, agentContext, journalCy
   const action = decision?.action ?? "hold";
 
   els.agentVerdict.textContent = labels[action] ?? action.toUpperCase();
-  els.agentVerdict.className = `agent-verdict-action ${actionClass(action)}`;
+  els.agentVerdict.className = `agent-verdict-action ${actionClass(action)} verdict-slam`;
+  setTimeout(() => els.agentVerdict.classList.remove("verdict-slam"), 520);
   els.agentVerdictMeta.textContent = decision
     ? `Confidence ${(decision.confidence * 100).toFixed(0)}% · ${execution?.status ?? "pending"}`
     : "Run a cycle to get an agent decision";
@@ -873,6 +932,7 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
     );
     renderPortfolioCard(portfolio, null);
     renderTribunal(null);
+    renderTribunalJury(null);
     setAgentState("idle", "Idle · waiting for cycle");
     return;
   }
@@ -901,6 +961,7 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
   }
 
   renderAgent(decision, latest.execution, decision.reasoning, latest.agentContext, journalCycles);
+  renderTribunalJury(tribunal);
 }
 
 function formatTime(iso) {
@@ -1059,7 +1120,9 @@ function startCycleAnimation() {
   let step = 0;
   els.overlay.classList.add("open");
   setAgentState("thinking", "Reasoning · memory + tribunal + plan");
-  setAgentSteps("plan");
+  setAgentSteps("memory");
+  setDeliberating(false);
+  renderTribunalJury(null, { deliberating: true, activeIndex: 0 });
   els.reasoning.textContent = "Qwen is reading market data, tribunal votes, and news. This usually takes 30 to 50 seconds...";
   renderPipeline(0);
 
@@ -1070,6 +1133,16 @@ function startCycleAnimation() {
     els.overlayHint.textContent = s.hint;
     els.progressFill.style.width = `${s.pct}%`;
     renderPipeline(step);
+    setAgentSteps(s.agentStep);
+
+    if (s.agentStep === "tribunal") {
+      startJuryDeliberation();
+      setDeliberating(false);
+    } else if (s.agentStep === "plan") {
+      stopJuryAnimation();
+      setDeliberating(true);
+    }
+
     step += 1;
     if (step < CYCLE_STEPS.length) {
       const delay = step === 5 ? 22000 : step === 4 ? 18000 : 3500;
@@ -1082,6 +1155,8 @@ function startCycleAnimation() {
 function stopCycleAnimation() {
   if (cycleTimer) clearTimeout(cycleTimer);
   cycleTimer = null;
+  stopJuryAnimation();
+  setDeliberating(false);
   els.overlay.classList.remove("open");
   els.progressFill.style.width = "0%";
   renderPipeline(-1, true);
