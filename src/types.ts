@@ -100,9 +100,17 @@ export interface TradeDecision {
   leverage: number;
   stopLossPct: number | null;
   takeProfitPct: number | null;
+  plan: string;
   reasoning: string;
   risks: string[];
   signals: string[];
+}
+
+export interface AgentContext {
+  memoryUsed: number;
+  plan: string;
+  reflection: string;
+  nextFocus: string;
 }
 
 export interface RiskVerdict {
@@ -151,4 +159,5 @@ export interface AgentCycleRecord {
   riskVerdict: RiskVerdict;
   execution: ExecutionResult;
   portfolio?: PaperPortfolio;
+  agentContext?: AgentContext;
 }

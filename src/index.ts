@@ -29,13 +29,15 @@ async function main() {
       break;
     }
     case "batch": {
-      const count = Number(process.argv[3] ?? 5);
-      if (!Number.isFinite(count) || count < 1 || count > 20) {
-        console.error("Usage: pnpm batch <1-20>");
+      const count = Number(process.argv[3] ?? 10);
+      const gapSec = Number(process.argv[4] ?? 12);
+      if (!Number.isFinite(count) || count < 1 || count > 30) {
+        console.error("Usage: pnpm batch <1-30> [gapSeconds]");
         process.exit(1);
       }
-      logger.info("vector.batch", { count });
-      await runAgentLoop(count, 10_000);
+      const gapMs = Math.max(8, gapSec) * 1000;
+      logger.info("vector.batch", { count, gapMs });
+      await runAgentLoop(count, gapMs);
       break;
     }
     default:
@@ -43,7 +45,8 @@ async function main() {
   pnpm start            # single cycle
   pnpm agent:once       # single cycle
   pnpm agent:run        # continuous loop
-  pnpm batch 5          # run 5 cycles (builds journal history)
+  pnpm batch 10         # run 10 cycles, 12s apart (builds journal for judges)
+  pnpm batch 20 15      # 20 cycles, 15s apart
   pnpm api              # demo API server`);
       process.exit(1);
   }

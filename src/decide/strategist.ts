@@ -11,6 +11,7 @@ const decisionSchema = z.object({
   leverage: z.number().int().min(1).max(125),
   stopLossPct: z.number().min(0.1).max(20).nullable(),
   takeProfitPct: z.number().min(0.1).max(50).nullable(),
+  plan: z.string().min(10).max(200),
   reasoning: z.string().min(20),
   risks: z.array(z.string()).min(1).max(6),
   signals: z.array(z.string()).min(1).max(8),
@@ -64,6 +65,7 @@ function fallbackDecision(
       leverage: bundle.regime.regime === "volatile" ? 2 : 3,
       stopLossPct: 2,
       takeProfitPct: 4,
+      plan: `Enter long on tribunal alignment in ${bundle.regime.regime} regime.`,
       reasoning: `Signal tribunal leans long (${(tribunal.alignment * 100).toFixed(0)}% alignment) in ${bundle.regime.regime} regime. Fallback entry near $${lastPrice}.`,
       risks: ["Fallback mode", `24h ${change24hPct.toFixed(2)}%`],
       signals: tribunal.channels.map((c) => `${c.name}:${c.vote}`),
@@ -78,6 +80,7 @@ function fallbackDecision(
       leverage: bundle.regime.regime === "volatile" ? 2 : 3,
       stopLossPct: 2,
       takeProfitPct: 4,
+      plan: `Enter short on tribunal alignment in ${bundle.regime.regime} regime.`,
       reasoning: `Signal tribunal leans short (${(tribunal.alignment * 100).toFixed(0)}% alignment) in ${bundle.regime.regime} regime.`,
       risks: ["Fallback mode", "Short squeeze risk"],
       signals: tribunal.channels.map((c) => `${c.name}:${c.vote}`),
@@ -91,6 +94,7 @@ function fallbackDecision(
     leverage: 1,
     stopLossPct: null,
     takeProfitPct: null,
+    plan: tribunal.conflict ? "Stay flat until tribunal channels align." : "No edge — preserve capital.",
     reasoning: tribunal.conflict
       ? `Signal tribunal is split — preserving capital until channels align.`
       : `No aligned edge in ${bundle.regime.regime} regime.`,
@@ -101,7 +105,8 @@ function fallbackDecision(
 
 export async function decideTrade(
   bundle: PerceptionBundle,
-  tribunal: TribunalVerdict
+  tribunal: TribunalVerdict,
+  memoryPrompt = "No prior cycles."
 ): Promise<TradeDecision> {
   const llm = getLlmConfig();
   if (!llm) {
@@ -111,14 +116,18 @@ export async function decideTrade(
   const settings = getSettingsSync();
   const systemPrompt = `You are Vector, an autonomous crypto futures trading agent for Bitget Hackathon.
 You receive a Signal Tribunal — 4 independent channels (technical, funding, news, on-chain) that voted before you.
-Your job: reconcile the weighted tribunal with market regime, then decide.
+You also receive MEMORY of your recent autonomous cycles — use it to avoid repeating mistakes and to stay consistent.
+Your job: state a one-sentence plan, reconcile the weighted tribunal with market regime, then decide.
 The trader's active profile (${tribunal.profile.name}) weights channels — respect high-weight channels more.
 Return JSON only. Be conservative when tribunal.conflict is true or alignment < 0.5.
 Never exceed ${settings.maxNotionalUsdt} USDT notional or ${settings.maxLeverage}x leverage.
 Every long/short MUST include stopLossPct.
 Explain which tribunal channels you agreed or disagreed with.`;
 
-  const userPrompt = `Perception: ${bundle.summary}
+  const userPrompt = `Agent memory (recent cycles):
+${memoryPrompt}
+
+Perception: ${bundle.summary}
 
 Market regime: ${bundle.regime.regime}
 - ${bundle.regime.summary}
@@ -151,6 +160,7 @@ Return JSON:
   "leverage": integer,
   "stopLossPct": number | null,
   "takeProfitPct": number | null,
+  "plan": "one sentence — what you intend this cycle before acting",
   "reasoning": "2-4 sentences — cite tribunal channels you followed or overrode",
   "risks": ["..."],
   "signals": ["tag1", "tag2"]

@@ -55,12 +55,14 @@ app.get("/api/meta", async (_req, res) => {
     hasBitgetAuth,
     llm: hasLlm ? { provider: env.LLM_PROVIDER, model: env.LLM_MODEL } : null,
     pipeline: [
-      { step: 1, id: "perceive", label: "Read live market data" },
-      { step: 2, id: "tribunal", label: "Four signals vote" },
-      { step: 3, id: "decide", label: "Qwen makes the call" },
-      { step: 4, id: "risk", label: "Risk checks run" },
-      { step: 5, id: "execute", label: settings.dryRun ? "Simulate order" : "Send to Bitget" },
-      { step: 6, id: "journal", label: "Log to audit trail" },
+      { step: 1, id: "memory", label: "Load agent memory" },
+      { step: 2, id: "perceive", label: "Read live market data" },
+      { step: 3, id: "tribunal", label: "Four signals vote" },
+      { step: 4, id: "decide", label: "Qwen plans and decides" },
+      { step: 5, id: "risk", label: "Risk checks run" },
+      { step: 6, id: "execute", label: settings.dryRun ? "Simulate order" : "Send to Bitget" },
+      { step: 7, id: "reflect", label: "Agent reflects on outcome" },
+      { step: 8, id: "journal", label: "Log to audit trail" },
     ],
     dataSources: [
       {

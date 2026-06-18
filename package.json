@@ -2,7 +2,7 @@
   "name": "vector",
   "version": "0.1.0",
   "private": true,
-  "description": "Vector — autonomous AI trading agent for Bitget (perceive → decide → execute)",
+  "description": "Autonomous Bitget trading agent with Signal Tribunal, Qwen memory + reflection loop, paper PnL ledger — Bitget AI Hackathon S1",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",

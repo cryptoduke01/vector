@@ -15,12 +15,14 @@ Not another black-box bot. Vector runs **4 independent signal channels** that vo
 
 ## Loop
 
-1. **Perceive** — Bitget market + Exa news + Solana DEX + regime classifier
-2. **Tribunal** — 4 channels vote bullish/bearish/neutral
-3. **Decide** — Qwen reconciles tribunal + regime
-4. **Guard** — Alignment check, conflict sizing, stop-loss, caps
-5. **Execute** — Bitget futures via `bitget-core` (dry-run default)
-6. **Journal** — Full audit trail + paper portfolio in `data/`
+1. **Memory** — recalls last 5 cycles before deciding
+2. **Perceive** — Bitget market + Exa news + Solana DEX + regime classifier
+3. **Tribunal** — 4 channels vote bullish/bearish/neutral
+4. **Plan + decide** — Qwen states intent, reconciles tribunal + regime
+5. **Guard** — Alignment check, conflict sizing, stop-loss, caps
+6. **Execute** — Bitget futures via `bitget-core` (dry-run default)
+7. **Reflect** — agent reviews outcome and sets next focus
+8. **Journal** — Full audit trail + paper portfolio in `data/`
 
 ## Quick start
 
@@ -28,6 +30,8 @@ Not another black-box bot. Vector runs **4 independent signal channels** that vo
 cp .env.example .env
 pnpm install
 pnpm start          # one agent cycle (dry-run)
+pnpm batch 20 12    # 20 cycles, 12s apart — builds judge-ready journal
+pnpm export:log     # export paper trading log for submission
 pnpm api            # demo dashboard on http://localhost:4100
 ```
 

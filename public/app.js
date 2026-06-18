@@ -13,6 +13,10 @@ const els = {
   agentVerdict: document.getElementById("agentVerdict"),
   agentVerdictMeta: document.getElementById("agentVerdictMeta"),
   agentModel: document.getElementById("agentModel"),
+  agentPlan: document.getElementById("agentPlan"),
+  agentReflection: document.getElementById("agentReflection"),
+  agentMemoryList: document.getElementById("agentMemoryList"),
+  agentSteps: document.getElementById("agentSteps"),
   journal: document.getElementById("journal"),
   modeBadge: document.getElementById("modeBadge"),
   conflictBadge: document.getElementById("conflictBadge"),
@@ -218,7 +222,15 @@ function setAgentState(state, text) {
   if (text) els.agentStatus.textContent = text;
 }
 
-function renderAgent(decision, execution, reasoningText) {
+function setAgentSteps(activeStep) {
+  if (!els.agentSteps) return;
+  els.agentSteps.querySelectorAll(".agent-step").forEach((el) => {
+    el.classList.toggle("active", el.dataset.step === activeStep);
+    el.classList.toggle("done", false);
+  });
+}
+
+function renderAgent(decision, execution, reasoningText, agentContext, journalCycles) {
   const labels = { long: "LONG", short: "SHORT", hold: "HOLD", close: "CLOSE" };
   const action = decision?.action ?? "hold";
 
@@ -228,13 +240,43 @@ function renderAgent(decision, execution, reasoningText) {
     ? `Confidence ${(decision.confidence * 100).toFixed(0)}% · ${execution?.status ?? "pending"}`
     : "Run a cycle to get an agent decision";
 
+  const planText = agentContext?.plan ?? decision?.plan;
+  if (els.agentPlan) {
+    els.agentPlan.innerHTML = `
+      <span class="agent-block-label">Plan</span>
+      <p>${planText ?? "Run a cycle to see the agent state its intent before trading."}</p>`;
+  }
+
   els.reasoning.textContent =
     reasoningText ??
-    "Agent reasoning will appear here after each cycle. Qwen reads all four signal votes, reconciles conflicts, and explains the trade call in plain language.";
+    "Agent reasoning will appear here after each cycle. The model reads memory, signal votes, reconciles conflicts, and explains the trade call.";
+
+  if (els.agentReflection) {
+    const reflection = agentContext?.reflection;
+    const nextFocus = agentContext?.nextFocus;
+    els.agentReflection.innerHTML = reflection
+      ? `<span class="agent-block-label">Reflection</span><p>${reflection}</p>${nextFocus ? `<p class="agent-next-focus"><strong>Next focus:</strong> ${nextFocus}</p>` : ""}`
+      : `<span class="agent-block-label">Reflection</span><p>After each cycle the agent reviews what happened and sets focus for the next run.</p>`;
+  }
+
+  if (els.agentMemoryList) {
+    const recent = (journalCycles ?? []).slice(0, 5);
+    if (!recent.length) {
+      els.agentMemoryList.innerHTML = '<p class="stat-meta">No prior cycles in memory yet.</p>';
+    } else {
+      els.agentMemoryList.innerHTML = recent
+        .map((cy) => {
+          const d = cy.riskVerdict?.adjustedDecision ?? cy.rawDecision;
+          return `<div class="memory-chip"><span class="${statusClass(d.action)}">${d.action}</span> ${cy.symbol} · $${(cy.portfolio?.equity ?? 0).toFixed(0)}</div>`;
+        })
+        .join("");
+    }
+  }
 
   els.reasoning.classList.add("streaming");
   setTimeout(() => els.reasoning.classList.remove("streaming"), 600);
-  setAgentState("ready", "Online · last cycle complete");
+  setAgentState("ready", agentContext?.memoryUsed ? `Online · ${agentContext.memoryUsed} cycles in memory` : "Online · last cycle complete");
+  setAgentSteps("reflect");
 }
 
 function renderPipeline(activeIndex = -1, allDone = false) {
@@ -818,7 +860,7 @@ function renderTribunal(tribunal) {
   }
 }
 
-function renderLatest(latest, portfolio, maxNotionalUsdt = 100) {
+function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = []) {
   if (!latest) {
     renderSignalsCard(null);
     renderDecisionCard(
@@ -856,7 +898,7 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100) {
     renderTribunal(tribunal);
   }
 
-  renderAgent(decision, latest.execution, decision.reasoning);
+  renderAgent(decision, latest.execution, decision.reasoning, latest.agentContext, journalCycles);
 }
 
 function formatTime(iso) {
@@ -967,7 +1009,8 @@ function renderJournal(cycles) {
 function startCycleAnimation() {
   let step = 0;
   els.overlay.classList.add("open");
-  setAgentState("thinking", "Reasoning · reconciling signal votes");
+  setAgentState("thinking", "Reasoning · memory + tribunal + plan");
+  setAgentSteps("plan");
   els.reasoning.textContent = "Qwen is reading market data, tribunal votes, and news. This usually takes 30 to 50 seconds...";
   renderPipeline(0);
 
@@ -1011,7 +1054,7 @@ async function refresh(options = {}) {
   els.modeBadge.className = `badge ${status.dryRun ? "badge-dry" : "badge-live"}`;
 
   renderAutopilot(status.autopilot);
-  renderLatest(status.latest, status.portfolio, status.maxNotionalUsdt ?? 100);
+  renderLatest(status.latest, status.portfolio, status.maxNotionalUsdt ?? 100, journal.cycles ?? []);
   renderJournal(journal.cycles ?? []);
 
   lastChartData = {

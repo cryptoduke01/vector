@@ -33,6 +33,9 @@ const trades = [...journal].reverse().map((cycle) => {
     accountBalance: equity,
     balanceChange,
     executionStatus: cycle.execution?.status ?? "unknown",
+    plan: cycle.agentContext?.plan ?? decision.plan ?? null,
+    reflection: cycle.agentContext?.reflection ?? null,
+    nextFocus: cycle.agentContext?.nextFocus ?? null,
     cycleId: cycle.id,
   };
 });

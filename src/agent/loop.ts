@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { formatMemoryForPrompt, getRecentMemory } from "./memory.js";
+import { reflectOnCycle } from "./reflect.js";
 import { getSettingsSync } from "../config/settings.js";
 import { decideTrade } from "../decide/strategist.js";
 import { applyRiskGuards } from "../decide/risk.js";
@@ -18,7 +20,9 @@ export async function runAgentCycle(symbol = getSettingsSync().symbol): Promise<
 
   const perception = await perceive(symbol);
   const tribunal = await runSignalTribunal(perception, perception.regime);
-  const rawDecision = await decideTrade(perception, tribunal);
+  const memoryEntries = await getRecentMemory(5);
+  const memoryPrompt = formatMemoryForPrompt(memoryEntries);
+  const rawDecision = await decideTrade(perception, tribunal, memoryPrompt);
   const riskVerdict = applyRiskGuards(rawDecision, tribunal);
   const decision = riskVerdict.adjustedDecision;
 
@@ -49,6 +53,15 @@ export async function runAgentCycle(symbol = getSettingsSync().symbol): Promise<
   };
 
   record.portfolio = await updatePaperPortfolio(record);
+
+  const reflection = await reflectOnCycle(record);
+  record.agentContext = {
+    memoryUsed: memoryEntries.length,
+    plan: decision.plan,
+    reflection: reflection.reflection,
+    nextFocus: reflection.nextFocus,
+  };
+
   await appendCycle(record);
 
   logger.info("cycle.complete", {
