@@ -230,27 +230,73 @@ html, body {
 .topbar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
+  flex: 1;
 }
 
 .menu-btn {
   display: none;
+  align-items: center;
+  justify-content: center;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px;
+  padding: 7px;
   cursor: pointer;
   color: var(--text);
+  flex-shrink: 0;
 }
 
-.topbar-left h1 {
+.topbar-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.topbar-logo {
+  width: 30px;
+  height: 30px;
+  background: var(--logo-src) center/contain no-repeat;
+  flex-shrink: 0;
+}
+
+.topbar-brand-text strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.topbar-brand-text span {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.topbar-sep {
+  display: none;
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.topbar-page {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
-.topbar-left svg { width: 20px; height: 20px; color: var(--text-muted); }
 
 .topbar-right {
   display: flex;
@@ -1650,17 +1696,32 @@ html, body {
   .sidebar.open { transform: translateX(0); }
   .main { margin-left: 0; }
   .menu-btn { display: inline-flex; }
+  .topbar-brand { display: flex; }
+  .topbar-sep { display: block; }
+  .topbar-page {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
   .content { padding: 14px; }
-  .topbar { padding: 10px 14px; flex-wrap: wrap; }
+  .topbar {
+    padding: 10px 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
   .stats-row { grid-template-columns: 1fr; }
   .stats-row .card:last-child { grid-column: auto; }
   .stat-value { font-size: 1.6rem; }
   .agent-verdict-action { font-size: 1.25rem; }
   .agent-model { margin-left: 0; }
-  .topbar-right { width: 100%; justify-content: flex-end; }
-  .toolbar-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .topbar-right {
+    width: auto;
+    flex-shrink: 0;
+  }
+  .toolbar-actions { flex-wrap: nowrap; }
   .agent-verdict-meta { text-align: left; margin-left: 0; flex: 1 1 100%; }
   .tribunal-jury { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #modeBadge { display: none; }
 }
 
 @media (max-width: 480px) {
