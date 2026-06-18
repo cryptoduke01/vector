@@ -954,34 +954,148 @@ html, body {
 .juror.vote-bearish .juror-vote,
 .juror.vote-bearish .juror-score { color: var(--red); }
 
-.agent-output {
-  font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  line-height: 1.75;
-  white-space: pre-wrap;
-  margin: 0;
-  padding: 16px 18px;
-  background: var(--card-inner);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  min-height: 80px;
-}
-
-.agent-panel.thinking .agent-output {
+.agent-panel.thinking #reasoningText {
   color: var(--text-muted);
   font-style: italic;
-}
-
-.agent-output.streaming {
-  animation: textReveal 0.6s var(--ease);
 }
 
 .agent-steps {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 12px 0 4px;
+  margin: 14px 0 0;
+}
+
+.agent-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.agent-card {
+  padding: 14px 16px;
+  background: var(--card-inner);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.agent-plan p,
+.agent-reflection p,
+.agent-output p,
+.transcript-placeholder {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.agent-output {
+  margin: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.agent-plan,
+.agent-reflection,
+.agent-memory,
+.agent-transcript {
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.typewriting::after {
+  content: "▋";
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--cyan);
+  animation: cursorBlink 0.85s step-end infinite;
+  font-size: 0.82em;
+  vertical-align: baseline;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.transcript-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.transcript-head .agent-block-label { margin-bottom: 0; }
+
+.btn-transcript {
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  gap: 6px;
+}
+
+.btn-transcript.speaking {
+  color: var(--cyan);
+  border-color: rgba(34, 211, 238, 0.4);
+}
+
+.transcript-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.transcript-line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.35s var(--ease);
+}
+
+.transcript-meta {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.transcript-bubble {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.transcript-line.role-agent .transcript-bubble {
+  border-color: rgba(168, 85, 247, 0.25);
+  background: var(--purple-dim);
+}
+
+.transcript-line.role-system .transcript-bubble {
+  border-color: rgba(34, 211, 238, 0.2);
+  background: var(--cyan-dim);
+  font-size: 0.8rem;
+}
+
+.transcript-placeholder {
+  font-size: 0.82rem !important;
+  color: var(--text-muted) !important;
+  font-style: italic;
 }
 
 .agent-step {
@@ -1010,24 +1124,6 @@ html, body {
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin-bottom: 6px;
-}
-
-.agent-plan,
-.agent-reflection,
-.agent-memory {
-  padding: 12px 14px;
-  background: var(--card-inner);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.agent-plan p,
-.agent-reflection p {
-  margin: 0;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  line-height: 1.6;
 }
 
 .agent-next-focus {

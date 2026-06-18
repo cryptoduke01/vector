@@ -235,18 +235,36 @@
                 <span class="agent-step" data-step="act">Act</span>
                 <span class="agent-step" data-step="reflect">Reflect</span>
               </div>
-              <div id="agentPlan" class="agent-plan">
-                <span class="agent-block-label">Plan</span>
-                <p>Run a cycle to see the agent state its intent before trading.</p>
-              </div>
-              <div id="reasoning" class="agent-output">Agent reasoning will appear here after each cycle. The model reads memory, signal votes, reconciles conflicts, and explains the trade call.</div>
-              <div id="agentReflection" class="agent-reflection">
-                <span class="agent-block-label">Reflection</span>
-                <p>After each cycle the agent reviews what happened and sets focus for the next run.</p>
-              </div>
-              <div id="agentMemory" class="agent-memory">
-                <span class="agent-block-label">Memory · last cycles</span>
-                <div id="agentMemoryList" class="agent-memory-list"></div>
+              <div class="agent-stream">
+                <div id="agentPlan" class="agent-plan agent-card">
+                  <span class="agent-block-label">Plan</span>
+                  <p id="agentPlanText">Run a cycle to see the agent state its intent before trading.</p>
+                </div>
+                <div id="reasoning" class="agent-output agent-card">
+                  <span class="agent-block-label">Reasoning</span>
+                  <p id="reasoningText">Agent reasoning will appear here after each cycle.</p>
+                </div>
+                <div id="agentReflection" class="agent-reflection agent-card">
+                  <span class="agent-block-label">Reflection</span>
+                  <p id="agentReflectionText">After each cycle the agent reviews what happened and sets focus for the next run.</p>
+                  <p id="agentNextFocus" class="agent-next-focus" hidden></p>
+                </div>
+                <div id="agentTranscript" class="agent-transcript agent-card">
+                  <div class="transcript-head">
+                    <span class="agent-block-label">Voice transcript</span>
+                    <button id="speakTranscriptBtn" class="btn btn-ghost btn-transcript" type="button" disabled aria-label="Listen to transcript">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                      Listen
+                    </button>
+                  </div>
+                  <div id="agentTranscriptBody" class="transcript-body">
+                    <p class="transcript-placeholder">Transcript appears after each cycle — tribunal votes, verdict, plan, and reflection.</p>
+                  </div>
+                </div>
+                <div id="agentMemory" class="agent-memory agent-card">
+                  <span class="agent-block-label">Memory · last cycles</span>
+                  <div id="agentMemoryList" class="agent-memory-list"></div>
+                </div>
               </div>
             </div>
           </div>

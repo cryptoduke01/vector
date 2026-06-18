@@ -7,6 +7,12 @@ const els = {
   portfolioBody: document.getElementById("portfolioBody"),
   tribunal: document.getElementById("tribunal"),
   reasoning: document.getElementById("reasoning"),
+  reasoningText: document.getElementById("reasoningText"),
+  agentPlanText: document.getElementById("agentPlanText"),
+  agentReflectionText: document.getElementById("agentReflectionText"),
+  agentNextFocus: document.getElementById("agentNextFocus"),
+  agentTranscriptBody: document.getElementById("agentTranscriptBody"),
+  speakTranscriptBtn: document.getElementById("speakTranscriptBtn"),
   agentPanel: document.getElementById("agentPanel"),
   agentOrb: document.getElementById("agentOrb"),
   agentVerdictWrap: document.getElementById("agentVerdictWrap"),
@@ -93,6 +99,8 @@ const TRIBUNAL_JURORS = [
 ];
 
 let juryAnimTimer = null;
+let typewriterGen = 0;
+let lastTranscriptSpeech = "";
 
 function voteClass(v) {
   return `vote-${v}`;
@@ -275,6 +283,176 @@ function startJuryDeliberation() {
   tick();
 }
 
+function cancelTypewriters() {
+  typewriterGen += 1;
+}
+
+function typewriter(el, text, options = {}) {
+  const gen = typewriterGen;
+  const speed = options.speed ?? 10;
+  const startDelay = options.delay ?? 0;
+
+  return new Promise((resolve) => {
+    if (!el) {
+      resolve();
+      return;
+    }
+
+    const run = () => {
+      el.textContent = "";
+      el.classList.add("typewriting");
+      let index = 0;
+
+      const tick = () => {
+        if (gen !== typewriterGen) {
+          el.classList.remove("typewriting");
+          resolve();
+          return;
+        }
+        if (index >= text.length) {
+          el.classList.remove("typewriting");
+          resolve();
+          return;
+        }
+        el.textContent += text[index];
+        index += 1;
+        setTimeout(tick, speed);
+      };
+
+      tick();
+    };
+
+    if (startDelay > 0) setTimeout(run, startDelay);
+    else run();
+  });
+}
+
+async function typewriterSequence(entries) {
+  for (const entry of entries) {
+    if (!entry?.el || !entry.text) continue;
+    await typewriter(entry.el, entry.text, entry);
+  }
+}
+
+function buildTranscriptLines(decision, agentContext, tribunal) {
+  const lines = [];
+  const action = (decision?.action ?? "hold").toUpperCase();
+  const confidence = ((decision?.confidence ?? 0) * 100).toFixed(0);
+
+  if (tribunal?.channels?.length) {
+    const summary = tribunal.channels.map((c) => `${c.name} ${c.vote}`).join(", ");
+    lines.push({
+      role: "system",
+      label: "Tribunal",
+      text: `Four channels voted. ${summary}. Consensus: ${tribunal.consensus}.`,
+    });
+  }
+
+  lines.push({
+    role: "agent",
+    label: "Vector",
+    text: `Verdict: ${action}. Confidence ${confidence} percent.`,
+  });
+
+  const plan = agentContext?.plan ?? decision?.plan;
+  if (plan) lines.push({ role: "agent", label: "Vector", text: plan });
+
+  if (decision?.reasoning) {
+    lines.push({ role: "agent", label: "Vector", text: decision.reasoning });
+  }
+
+  if (agentContext?.reflection) {
+    lines.push({ role: "agent", label: "Vector", text: agentContext.reflection });
+  }
+
+  if (agentContext?.nextFocus) {
+    lines.push({
+      role: "system",
+      label: "Focus",
+      text: `Next cycle focus: ${agentContext.nextFocus}`,
+    });
+  }
+
+  return lines;
+}
+
+function transcriptSpeechText(lines) {
+  return lines.map((line) => line.text).join(" ");
+}
+
+async function renderTranscript(lines, options = {}) {
+  if (!els.agentTranscriptBody) return;
+
+  cancelTypewriters();
+  const gen = typewriterGen;
+
+  if (!lines.length) {
+    els.agentTranscriptBody.innerHTML =
+      '<p class="transcript-placeholder">Transcript appears after each cycle — tribunal votes, verdict, plan, and reflection.</p>';
+    if (els.speakTranscriptBtn) els.speakTranscriptBtn.disabled = true;
+    lastTranscriptSpeech = "";
+    return;
+  }
+
+  els.agentTranscriptBody.innerHTML = "";
+  lastTranscriptSpeech = transcriptSpeechText(lines);
+  if (els.speakTranscriptBtn) els.speakTranscriptBtn.disabled = false;
+
+  for (const line of lines) {
+    if (gen !== typewriterGen) return;
+
+    const row = document.createElement("div");
+    row.className = `transcript-line role-${line.role}`;
+    row.innerHTML = `
+      <span class="transcript-meta">${line.label}</span>
+      <div class="transcript-bubble"></div>`;
+    const bubble = row.querySelector(".transcript-bubble");
+    els.agentTranscriptBody.appendChild(row);
+
+    if (options.instant) {
+      bubble.textContent = line.text;
+    } else {
+      await typewriter(bubble, line.text, { speed: 8 });
+    }
+
+    els.agentTranscriptBody.scrollTop = els.agentTranscriptBody.scrollHeight;
+  }
+}
+
+function stopTranscriptSpeech() {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  els.speakTranscriptBtn?.classList.remove("speaking");
+  if (els.speakTranscriptBtn) els.speakTranscriptBtn.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+    Listen`;
+}
+
+function speakTranscript() {
+  if (!lastTranscriptSpeech || !window.speechSynthesis) return;
+
+  if (window.speechSynthesis.speaking) {
+    stopTranscriptSpeech();
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(lastTranscriptSpeech);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.onend = stopTranscriptSpeech;
+  utterance.onerror = stopTranscriptSpeech;
+
+  els.speakTranscriptBtn?.classList.add("speaking");
+  if (els.speakTranscriptBtn) {
+    els.speakTranscriptBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      Stop`;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
 function setAgentState(state, text) {
   els.agentPanel.classList.remove("thinking", "ready", "idle");
   els.agentPanel.classList.add(state);
@@ -290,9 +468,11 @@ function setAgentSteps(activeStep) {
   });
 }
 
-function renderAgent(decision, execution, reasoningText, agentContext, journalCycles) {
+async function renderAgent(decision, execution, reasoningText, agentContext, journalCycles, tribunal, options = {}) {
   const labels = { long: "LONG", short: "SHORT", hold: "HOLD", close: "CLOSE" };
   const action = decision?.action ?? "hold";
+  const hasCycle = Boolean(decision?.reasoning || agentContext?.plan);
+  const instant = Boolean(options.quiet || options.instant);
 
   els.agentVerdict.textContent = labels[action] ?? action.toUpperCase();
   els.agentVerdict.className = `agent-verdict-action ${actionClass(action)} verdict-slam`;
@@ -302,22 +482,71 @@ function renderAgent(decision, execution, reasoningText, agentContext, journalCy
     : "Run a cycle to get an agent decision";
 
   const planText = agentContext?.plan ?? decision?.plan;
-  if (els.agentPlan) {
-    els.agentPlan.innerHTML = `
-      <span class="agent-block-label">Plan</span>
-      <p>${planText ?? "Run a cycle to see the agent state its intent before trading."}</p>`;
-  }
+  const reflection = agentContext?.reflection;
+  const nextFocus = agentContext?.nextFocus;
+  const transcriptLines = hasCycle ? buildTranscriptLines(decision, agentContext, tribunal) : [];
 
-  els.reasoning.textContent =
-    reasoningText ??
-    "Agent reasoning will appear here after each cycle. The model reads memory, signal votes, reconciles conflicts, and explains the trade call.";
+  cancelTypewriters();
 
-  if (els.agentReflection) {
-    const reflection = agentContext?.reflection;
-    const nextFocus = agentContext?.nextFocus;
-    els.agentReflection.innerHTML = reflection
-      ? `<span class="agent-block-label">Reflection</span><p>${reflection}</p>${nextFocus ? `<p class="agent-next-focus"><strong>Next focus:</strong> ${nextFocus}</p>` : ""}`
-      : `<span class="agent-block-label">Reflection</span><p>After each cycle the agent reviews what happened and sets focus for the next run.</p>`;
+  if (!hasCycle) {
+    const idlePlan = "Run a cycle to see the agent state its intent before trading.";
+    const idleReasoning =
+      "Agent reasoning will appear here after each cycle. The model reads memory, signal votes, reconciles conflicts, and explains the trade call.";
+    const idleReflection = "After each cycle the agent reviews what happened and sets focus for the next run.";
+
+    if (instant) {
+      if (els.agentPlanText) els.agentPlanText.textContent = idlePlan;
+      if (els.reasoningText) els.reasoningText.textContent = idleReasoning;
+      if (els.agentReflectionText) els.agentReflectionText.textContent = idleReflection;
+    } else {
+      void typewriterSequence([
+        { el: els.agentPlanText, text: idlePlan, delay: 200 },
+        { el: els.reasoningText, text: idleReasoning, delay: 0 },
+        { el: els.agentReflectionText, text: idleReflection, delay: 0 },
+      ]);
+    }
+    if (els.agentNextFocus) {
+      els.agentNextFocus.hidden = true;
+      els.agentNextFocus.textContent = "";
+    }
+    void renderTranscript([], { instant });
+  } else {
+    const planCopy = planText ?? "No plan recorded for this cycle.";
+    const reasoningCopy = reasoningText ?? "No reasoning returned.";
+    const reflectionCopy = reflection ?? "No reflection recorded.";
+
+    if (instant) {
+      if (els.agentPlanText) els.agentPlanText.textContent = planCopy;
+      if (els.reasoningText) els.reasoningText.textContent = reasoningCopy;
+      if (els.agentReflectionText) els.agentReflectionText.textContent = reflectionCopy;
+      if (els.agentNextFocus) {
+        if (nextFocus) {
+          els.agentNextFocus.hidden = false;
+          els.agentNextFocus.textContent = `Next focus: ${nextFocus}`;
+        } else {
+          els.agentNextFocus.hidden = true;
+          els.agentNextFocus.textContent = "";
+        }
+      }
+      void renderTranscript(transcriptLines, { instant: true });
+    } else {
+      const stream = [
+        { el: els.agentPlanText, text: planCopy, speed: 9 },
+        { el: els.reasoningText, text: reasoningCopy, speed: 7 },
+        { el: els.agentReflectionText, text: reflectionCopy, speed: 9 },
+      ];
+      void typewriterSequence(stream).then(() => {
+        if (els.agentNextFocus) {
+          if (nextFocus) {
+            els.agentNextFocus.hidden = false;
+            return typewriter(els.agentNextFocus, `Next focus: ${nextFocus}`, { speed: 10 });
+          }
+          els.agentNextFocus.hidden = true;
+          els.agentNextFocus.textContent = "";
+        }
+      });
+      void renderTranscript(transcriptLines);
+    }
   }
 
   if (els.agentMemoryList) {
@@ -334,8 +563,6 @@ function renderAgent(decision, execution, reasoningText, agentContext, journalCy
     }
   }
 
-  els.reasoning.classList.add("streaming");
-  setTimeout(() => els.reasoning.classList.remove("streaming"), 600);
   setAgentState("ready", agentContext?.memoryUsed ? `Online · ${agentContext.memoryUsed} cycles in memory` : "Online · last cycle complete");
   setAgentSteps("reflect");
 }
@@ -921,7 +1148,7 @@ function renderTribunal(tribunal) {
   }
 }
 
-function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = []) {
+function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = [], options = {}) {
   if (!latest) {
     renderSignalsCard(null);
     renderDecisionCard(
@@ -934,6 +1161,7 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
     renderTribunal(null);
     renderTribunalJury(null);
     setAgentState("idle", "Idle · waiting for cycle");
+    void renderAgent(null, null, null, null, [], null);
     return;
   }
 
@@ -960,7 +1188,7 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
     renderTribunal(tribunal);
   }
 
-  renderAgent(decision, latest.execution, decision.reasoning, latest.agentContext, journalCycles);
+  renderAgent(decision, latest.execution, decision.reasoning, latest.agentContext, journalCycles, tribunal, options);
   renderTribunalJury(tribunal);
 }
 
@@ -1123,7 +1351,10 @@ function startCycleAnimation() {
   setAgentSteps("memory");
   setDeliberating(false);
   renderTribunalJury(null, { deliberating: true, activeIndex: 0 });
-  els.reasoning.textContent = "Qwen is reading market data, tribunal votes, and news. This usually takes 30 to 50 seconds...";
+  if (els.reasoningText) {
+    els.reasoningText.textContent =
+      "Qwen is reading market data, tribunal votes, and news. This usually takes 30 to 50 seconds...";
+  }
   renderPipeline(0);
 
   const advance = () => {
@@ -1178,7 +1409,7 @@ async function refresh(options = {}) {
   els.modeBadge.className = `badge ${status.dryRun ? "badge-dry" : "badge-live"}`;
 
   renderAutopilot(status.autopilot);
-  renderLatest(status.latest, status.portfolio, status.maxNotionalUsdt ?? 100, journal.cycles ?? []);
+  renderLatest(status.latest, status.portfolio, status.maxNotionalUsdt ?? 100, journal.cycles ?? [], options);
   renderJournal(journal.cycles ?? []);
 
   lastChartData = {
@@ -1321,6 +1552,7 @@ els.journalRefreshBtn?.addEventListener("click", async () => {
 els.navSettings.addEventListener("click", () => scrollTo("settingsSection"));
 els.themeBtn.addEventListener("click", toggleTheme);
 els.menuBtn.addEventListener("click", openSidebar);
+els.speakTranscriptBtn?.addEventListener("click", speakTranscript);
 els.sidebarBackdrop.addEventListener("click", closeSidebar);
 
 init();
