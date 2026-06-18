@@ -11,6 +11,7 @@
     "agent:run": "tsx src/index.ts run",
     "batch": "tsx src/index.ts batch",
     "api": "tsx src/api/server.ts",
+    "export:log": "node scripts/export-trade-log.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
