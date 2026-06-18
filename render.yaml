@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: corepack enable && pnpm install && pnpm typecheck
-    startCommand: pnpm api
+    buildCommand: npm install -g pnpm@10 && pnpm install --frozen-lockfile && pnpm typecheck
+    startCommand: npm run api
     healthCheckPath: /health
     autoDeploy: true
     envVars:
