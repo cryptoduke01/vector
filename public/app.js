@@ -18,6 +18,8 @@ const els = {
   agentMemoryList: document.getElementById("agentMemoryList"),
   agentSteps: document.getElementById("agentSteps"),
   journal: document.getElementById("journal"),
+  journalCount: document.getElementById("journalCount"),
+  journalRefreshBtn: document.getElementById("journalRefreshBtn"),
   modeBadge: document.getElementById("modeBadge"),
   conflictBadge: document.getElementById("conflictBadge"),
   profileSelect: document.getElementById("profileSelect"),
@@ -986,24 +988,71 @@ async function loadSettings() {
   return data.settings;
 }
 
+function formatCycleTime(iso) {
+  return new Date(iso).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 function renderJournal(cycles) {
+  if (els.journalCount) {
+    els.journalCount.textContent = `${cycles?.length ?? 0} runs`;
+  }
+
   els.journal.innerHTML = "";
-  if (!cycles.length) {
-    els.journal.innerHTML = '<p class="stat-meta">No cycles logged yet.</p>';
+  if (!cycles?.length) {
+    els.journal.innerHTML = '<p class="stat-meta">No cycles logged yet. Run a cycle or start autopilot.</p>';
     return;
   }
-  for (const cycle of cycles.slice(0, 8)) {
+
+  for (const cycle of cycles.slice(0, 25)) {
     const d = cycle.riskVerdict?.adjustedDecision ?? cycle.rawDecision;
-    const row = document.createElement("div");
-    row.className = "journal-item";
+    const price = cycle.perception?.market?.lastPrice;
+    const equity = cycle.portfolio?.equity;
+    const ctx = cycle.agentContext;
+    const failed = cycle.execution?.status === "failed";
+
+    const row = document.createElement("details");
+    row.className = `journal-entry${failed ? " journal-entry-error" : ""}`;
     row.innerHTML = `
-      <div class="journal-left">
-        <span class="status-pill ${statusClass(d.action)}">${d.action}</span>
-        <span>${cycle.symbol}</span>
-      </div>
-      <span class="stat-meta">${new Date(cycle.completedAt).toLocaleString()}</span>`;
+      <summary class="journal-summary">
+        <div class="journal-left">
+          <span class="status-pill ${statusClass(d.action)}">${d.action}</span>
+          <span class="journal-symbol">${cycle.symbol}</span>
+          ${price != null ? `<span class="journal-price">$${price.toLocaleString()}</span>` : ""}
+        </div>
+        <div class="journal-meta">
+          <span class="journal-status">${cycle.execution?.status ?? "—"}</span>
+          ${equity != null ? `<span class="journal-equity">$${equity.toFixed(2)}</span>` : ""}
+          <span class="journal-time">${formatCycleTime(cycle.completedAt)}</span>
+        </div>
+      </summary>
+      <div class="journal-detail">
+        <div class="journal-detail-grid">
+          <div><span>Confidence</span><strong>${((d.confidence ?? 0) * 100).toFixed(0)}%</strong></div>
+          <div><span>Notional</span><strong>$${(d.notionalUsdt ?? 0).toFixed(0)}</strong></div>
+          <div><span>Leverage</span><strong>${d.leverage ?? 1}x</strong></div>
+          <div><span>Consensus</span><strong>${cycle.tribunal?.consensus ?? "—"}</strong></div>
+        </div>
+        ${ctx?.plan ? `<p class="journal-line"><strong>Plan:</strong> ${ctx.plan}</p>` : d.plan ? `<p class="journal-line"><strong>Plan:</strong> ${d.plan}</p>` : ""}
+        ${d.reasoning ? `<p class="journal-line"><strong>Reasoning:</strong> ${d.reasoning}</p>` : ""}
+        ${ctx?.reflection ? `<p class="journal-line"><strong>Reflection:</strong> ${ctx.reflection}</p>` : ""}
+        ${ctx?.nextFocus ? `<p class="journal-line"><strong>Next focus:</strong> ${ctx.nextFocus}</p>` : ""}
+        ${cycle.execution?.message ? `<p class="journal-line journal-muted">${cycle.execution.message}</p>` : ""}
+        <p class="journal-id">ID ${cycle.id}</p>
+      </div>`;
     els.journal.appendChild(row);
   }
+}
+
+async function loadJournal(limit = 50) {
+  const journal = await fetchJson(`/api/journal?limit=${limit}`);
+  renderJournal(journal.cycles ?? []);
+  return journal.cycles ?? [];
 }
 
 function startCycleAnimation() {
@@ -1043,7 +1092,7 @@ async function refresh(options = {}) {
   if (!options.quiet) clearError();
   const [status, journal] = await Promise.all([
     fetchJson("/api/status"),
-    fetchJson("/api/journal?limit=20"),
+    fetchJson("/api/journal?limit=50"),
   ]);
 
   profiles = status.profiles ?? [];
@@ -1184,6 +1233,16 @@ els.navSignals.addEventListener("click", () => scrollTo("cardSignals"));
 els.navAutopilot.addEventListener("click", () => scrollTo("autopilotSection"));
 els.navAgent.addEventListener("click", () => scrollTo("agentPanel"));
 els.navJournal.addEventListener("click", () => scrollTo("journalCard"));
+els.journalRefreshBtn?.addEventListener("click", async () => {
+  clearError();
+  try {
+    const cycles = await loadJournal(50);
+    lastChartData.cycles = cycles;
+    renderCharts(lastChartData.portfolio, cycles, lastChartData.latest);
+  } catch (err) {
+    showError(err.message || "Could not refresh cycle log");
+  }
+});
 els.navSettings.addEventListener("click", () => scrollTo("settingsSection"));
 els.themeBtn.addEventListener("click", toggleTheme);
 els.menuBtn.addEventListener("click", openSidebar);

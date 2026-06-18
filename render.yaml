@@ -3,9 +3,11 @@ services:
     name: vector-demo
     runtime: node
     plan: free
-    buildCommand: pnpm install && pnpm typecheck
+    region: singapore
+    buildCommand: corepack enable && pnpm install && pnpm typecheck
     startCommand: pnpm api
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production

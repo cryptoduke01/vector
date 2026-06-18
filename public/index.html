@@ -281,13 +281,14 @@
             <div class="card" id="journalCard">
               <div class="card-header">
                 <div>
-                  <h3 class="card-title">Recent cycles</h3>
-                  <div class="card-sub">Trade log · saved to data/journal.json</div>
+                  <h3 class="card-title">Cycle log</h3>
+                  <div class="card-sub">Live audit trail · fetched from /api/journal</div>
                 </div>
+                <span id="journalCount" class="badge badge-live">0 runs</span>
               </div>
-              <div class="tab-row">
-                <button class="tab active" type="button">All</button>
-                <button class="tab" type="button" disabled>Errors</button>
+              <div class="journal-toolbar">
+                <button id="journalRefreshBtn" class="btn btn-ghost btn-sm" type="button">Refresh</button>
+                <a id="journalExportLink" class="btn btn-ghost btn-sm" href="/api/journal?limit=100" target="_blank" rel="noopener">Export JSON</a>
               </div>
               <div id="journal" class="journal-list"></div>
             </div>

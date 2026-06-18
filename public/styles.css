@@ -419,7 +419,102 @@ html, body {
 .pipe-item .label { font-size: 0.85rem; font-weight: 700; }
 .pipe-item .hint { font-size: 0.75rem; color: var(--text-muted); }
 
-.journal-list { display: flex; flex-direction: column; }
+.journal-list { display: flex; flex-direction: column; gap: 8px; }
+
+.journal-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.journal-entry {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-inner);
+  overflow: hidden;
+}
+
+.journal-entry-error { border-color: var(--red); }
+
+.journal-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.journal-summary::-webkit-details-marker { display: none; }
+
+.journal-symbol { font-weight: 700; font-size: 0.85rem; }
+.journal-price { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+.journal-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.journal-status {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.journal-equity {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--green);
+}
+
+.journal-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.journal-detail {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.journal-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.journal-detail-grid span {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.journal-detail-grid strong {
+  font-size: 0.85rem;
+}
+
+.journal-line {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.journal-muted { color: var(--text-muted); font-size: 0.75rem; }
+.journal-id { margin: 8px 0 0; font-size: 0.65rem; color: var(--text-muted); word-break: break-all; }
 
 .journal-item {
   display: flex;
