@@ -669,6 +669,7 @@ function renderSources() {
 }
 
 function renderProfiles() {
+  if (!els.profileSelect) return;
   els.profileSelect.innerHTML = "";
   for (const p of profiles) {
     const opt = document.createElement("option");
@@ -1678,7 +1679,7 @@ async function triggerCycle() {
   }
 }
 
-els.profileSelect.addEventListener("change", async () => {
+els.profileSelect?.addEventListener("change", async () => {
   const id = els.profileSelect.value;
   clearError();
   try {

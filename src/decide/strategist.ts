@@ -11,10 +11,10 @@ const decisionSchema = z.object({
   leverage: z.number().int().min(1).max(125),
   stopLossPct: z.number().min(0.1).max(20).nullable(),
   takeProfitPct: z.number().min(0.1).max(50).nullable(),
-  plan: z.string().min(10).max(200),
-  reasoning: z.string().min(20),
-  risks: z.array(z.string()).min(1).max(6),
-  signals: z.array(z.string()).min(1).max(8),
+  plan: z.string().min(10).max(600),
+  reasoning: z.string().min(20).max(2000),
+  risks: z.array(z.string()).min(1).max(8),
+  signals: z.array(z.string()).min(1).max(12),
 });
 
 function formatCandles(bundle: PerceptionBundle): string {
@@ -152,7 +152,7 @@ ${formatNews(bundle)}
 
 Solana: ${bundle.solana.summary}
 
-Return JSON:
+Return JSON (plan must be 1-2 short sentences under 500 chars, reasoning under 1500 chars):
 {
   "action": "long" | "short" | "close" | "hold",
   "confidence": 0-1,
