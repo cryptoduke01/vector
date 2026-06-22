@@ -71,6 +71,23 @@ const els = {
   saveSettingsBtn: document.getElementById("saveSettingsBtn"),
   navAutopilot: document.getElementById("navAutopilot"),
   navSettings: document.getElementById("navSettings"),
+  verdictBar: document.getElementById("verdictBar"),
+  verdictBarAction: document.getElementById("verdictBarAction"),
+  verdictBarSymbol: document.getElementById("verdictBarSymbol"),
+  verdictBarConf: document.getElementById("verdictBarConf"),
+  verdictBarEquity: document.getElementById("verdictBarEquity"),
+  verdictBarCycles: document.getElementById("verdictBarCycles"),
+  verdictBarWinRate: document.getElementById("verdictBarWinRate"),
+  verdictBarLast: document.getElementById("verdictBarLast"),
+  verdictBarSignals: document.getElementById("verdictBarSignals"),
+  firstLoadHint: document.getElementById("firstLoadHint"),
+  dismissHint: document.getElementById("dismissHint"),
+  tribunalHero: document.getElementById("tribunalHero"),
+  tribunalHeroBadge: document.getElementById("tribunalHeroBadge"),
+  heroChannels: document.getElementById("heroChannels"),
+  heroConsensus: document.getElementById("heroConsensus"),
+  heroVerdict: document.getElementById("heroVerdict"),
+  heroSources: document.getElementById("heroSources"),
 };
 
 let profiles = [];
@@ -83,12 +100,12 @@ let lastChartData = { portfolio: null, cycles: [], latest: null, maxNotionalUsdt
 let hasBitgetAuth = false;
 
 const CYCLE_STEPS = [
-  { label: "Read live market data", hint: "Bitget BTC price, candles, funding", pct: 15, agentStep: "perceive" },
-  { label: "Fetch news headlines", hint: "Exa search, last 24 hours", pct: 30, agentStep: "perceive" },
-  { label: "Scan on-chain activity", hint: "DexScreener Solana DEX", pct: 45, agentStep: "memory" },
-  { label: "Run signal tribunal", hint: "Four channels vote", pct: 58, agentStep: "tribunal" },
-  { label: "Qwen decides", hint: "Usually 30 to 50 seconds", pct: 85, agentStep: "plan" },
-  { label: "Write audit log", hint: "Journal and paper wallet", pct: 100, agentStep: "act" },
+  { label: "Pulling live Bitget ticker", hint: "Price, candles, funding rate", pct: 15, agentStep: "perceive" },
+  { label: "Reading the news", hint: "Exa search · last 24 hours", pct: 30, agentStep: "perceive" },
+  { label: "Checking Solana on-chain", hint: "DexScreener flow + activity", pct: 45, agentStep: "memory" },
+  { label: "The jury is voting", hint: "Technical · Funding · News · On-chain", pct: 58, agentStep: "tribunal" },
+  { label: "Qwen is weighing the votes", hint: "30–50s · reconciling conflict", pct: 85, agentStep: "plan" },
+  { label: "Writing to the journal", hint: "Audit trail + paper wallet", pct: 100, agentStep: "act" },
 ];
 
 const TRIBUNAL_JURORS = [
@@ -97,6 +114,17 @@ const TRIBUNAL_JURORS = [
   { key: "news", label: "News", short: "NW" },
   { key: "onchain", label: "On-chain", short: "OC" },
 ];
+
+const CHANNEL_HINTS = {
+  technical: "Price action + candle momentum",
+  funding: "Perp funding rate · crowd positioning",
+  news: "Exa headlines · 24h sentiment",
+  onchain: "Solana DEX volume + flow",
+};
+
+function hintForChannel(key) {
+  return CHANNEL_HINTS[key] ?? "Awaiting cycle";
+}
 
 let juryAnimTimer = null;
 let typewriterGen = 0;
@@ -159,6 +187,8 @@ function renderEmptyDashboard() {
   renderPortfolioCard(null, null);
   renderTribunal(null);
   renderTribunalJury(null);
+  renderTribunalHero(null, null, null);
+  renderVerdictBar(null, null, null);
   renderJournal([]);
   renderCharts(null, [], null);
   renderAutopilot({
@@ -182,15 +212,39 @@ function clearError() {
 }
 
 function showWelcome() {
-  if (localStorage.getItem(STORAGE_KEY)) {
-    els.welcomeModal.classList.remove("open");
-    return;
-  }
-  els.welcomeModal.classList.add("open");
+  if (!els.welcomeModal) return;
+  els.welcomeModal.hidden = true;
+  els.welcomeModal.classList.remove("open");
 }
 
 function closeWelcome() {
+  if (!els.welcomeModal) return;
   els.welcomeModal.classList.remove("open");
+  els.welcomeModal.hidden = true;
+  localStorage.setItem(STORAGE_KEY, "1");
+}
+
+function showFirstLoadHint() {
+  if (!els.firstLoadHint) return;
+  if (localStorage.getItem(STORAGE_KEY)) {
+    els.firstLoadHint.hidden = true;
+    return;
+  }
+  els.firstLoadHint.hidden = false;
+  setTimeout(() => {
+    if (els.firstLoadHint && !els.firstLoadHint.hidden) {
+      els.firstLoadHint.classList.add("fading");
+      setTimeout(() => {
+        els.firstLoadHint.hidden = true;
+        els.firstLoadHint.classList.remove("fading");
+      }, 600);
+    }
+  }, 12000);
+}
+
+function dismissFirstLoadHint() {
+  if (!els.firstLoadHint) return;
+  els.firstLoadHint.hidden = true;
   localStorage.setItem(STORAGE_KEY, "1");
 }
 
@@ -953,6 +1007,7 @@ function renderCharts(portfolio, cycles, latest) {
 }
 
 function renderSignalsCard(tribunal, regime) {
+  if (!els.signalsBody) return;
   if (!tribunal?.channels?.length) {
     els.signalsBody.innerHTML = `
       <div class="stat-value vote-neutral">--</div>
@@ -1101,21 +1156,21 @@ function renderPortfolioCard(portfolio, marketPrice) {
 }
 
 function renderTribunal(tribunal) {
-  els.tribunal.innerHTML = "";
-  els.weightBars.innerHTML = "";
+  if (els.tribunal) els.tribunal.innerHTML = "";
+  if (els.weightBars) els.weightBars.innerHTML = "";
   if (!tribunal) {
-    els.profileMeta.textContent = "No votes yet";
-    els.tribunal.innerHTML = '<p class="stat-meta">Run a cycle first.</p>';
+    if (els.profileMeta) els.profileMeta.textContent = "Run a cycle to see channel weights";
+    if (els.tribunal) els.tribunal.innerHTML = '<p class="stat-meta">Run a cycle first.</p>';
     return;
   }
 
   const profile = tribunal.profile ?? profiles.find((p) => p.id === activeProfileId);
-  if (profile) {
-    els.profileMeta.textContent = `${profile.name}: ${profile.description}`;
+  if (profile && els.profileMeta) {
+    els.profileMeta.textContent = `${profile.name} profile · ${profile.description}`;
   }
 
   const weights = tribunal.effectiveWeights ?? profile?.weights;
-  if (weights) {
+  if (weights && els.weightBars) {
     for (const [key, val] of Object.entries(weights)) {
       const pill = document.createElement("span");
       pill.className = "weight-pill";
@@ -1124,6 +1179,7 @@ function renderTribunal(tribunal) {
     }
   }
 
+  if (!els.tribunal) return;
   const wrap = document.createElement("div");
   wrap.className = "channels";
   for (const ch of tribunal.channels ?? []) {
@@ -1148,6 +1204,136 @@ function renderTribunal(tribunal) {
   }
 }
 
+function renderVerdictBar(latest, portfolio, symbol) {
+  if (!els.verdictBar) return;
+  const decision = latest?.riskVerdict?.adjustedDecision ?? latest?.rawDecision;
+  const action = decision?.action ?? "hold";
+  const conf = decision?.confidence;
+  const labels = { long: "LONG", short: "SHORT", hold: "HOLD", close: "CLOSE" };
+  const resolvedSymbol = symbol ?? latest?.symbol ?? lastChartData?.symbol ?? els.settingSymbol?.value ?? "BTCUSDT";
+
+  els.verdictBar.dataset.action = action;
+  els.verdictBarAction.textContent = labels[action] ?? action.toUpperCase();
+  els.verdictBarSymbol.textContent = resolvedSymbol;
+  els.verdictBarConf.textContent = conf != null ? `${(conf * 100).toFixed(0)}%` : "—";
+
+  const equity = portfolio?.equity ?? portfolio?.startingEquity ?? 1000;
+  const start = portfolio?.startingEquity ?? 1000;
+  const pnlPct = ((equity - start) / start) * 100;
+  els.verdictBarEquity.textContent = `$${equity.toFixed(2)} (${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%)`;
+  els.verdictBarEquity.className = pnlPct >= 0 ? "pnl-pos" : "pnl-neg";
+
+  els.verdictBarCycles.textContent = String(portfolio?.totalTrades ?? 0);
+  els.verdictBarWinRate.textContent = portfolio?.totalTrades
+    ? `${(portfolio.winRate * 100).toFixed(0)}%`
+    : "—";
+  els.verdictBarLast.textContent = latest?.completedAt ? formatTime(latest.completedAt) : "—";
+
+  renderWhyTrade(decision, latest?.tribunal);
+}
+
+function renderWhyTrade(decision, tribunal) {
+  if (!els.verdictBarSignals) return;
+  const signals = Array.isArray(decision?.signals) ? decision.signals.filter(Boolean) : [];
+  const channels = tribunal?.channels ?? [];
+
+  if (!signals.length && !channels.length) {
+    els.verdictBarSignals.hidden = true;
+    els.verdictBarSignals.innerHTML = "";
+    return;
+  }
+
+  const channelChips = channels
+    .map((c) => `<span class="why-chip vote-${c.vote}">${c.name}: ${c.vote}</span>`)
+    .join("");
+  const tagChips = signals
+    .slice(0, 6)
+    .map((s) => `<span class="why-chip why-chip-tag">${String(s).replace(/_/g, " ")}</span>`)
+    .join("");
+
+  els.verdictBarSignals.hidden = false;
+  els.verdictBarSignals.innerHTML = `
+    <span class="why-label">Why:</span>
+    ${channelChips}${tagChips}`;
+}
+
+function renderTribunalHero(tribunal, decision, execution) {
+  if (!els.heroChannels) return;
+
+  const channelsList = TRIBUNAL_JURORS.map((juror) => {
+    const channel = tribunal?.channels?.find((c) => c.key === juror.key);
+    const vote = channel?.vote ?? "neutral";
+    const score = channel?.score;
+    const weight = channel?.weight;
+    const cls = channel ? voteClass(vote) : "hero-channel-empty";
+    return `
+      <div class="hero-channel ${cls}">
+        <div class="hero-channel-head">
+          <span class="hero-channel-name">${juror.label}</span>
+          <span class="hero-channel-weight">${weight != null ? `x${weight.toFixed(2)}` : "—"}</span>
+        </div>
+        <div class="hero-channel-vote ${channel ? voteClass(vote) : ""}">${channel ? vote : "waiting"}</div>
+        <div class="hero-channel-score">${score != null ? (score > 0 ? "+" : "") + score : "·"}</div>
+        <div class="hero-channel-detail">${channel?.detail ?? hintForChannel(juror.key)}</div>
+      </div>`;
+  }).join("");
+
+  els.heroChannels.innerHTML = channelsList;
+
+  if (els.heroConsensus) {
+    const consensus = tribunal?.consensus ?? "neutral";
+    const alignment = tribunal?.alignment;
+    const conflict = tribunal?.conflict;
+    els.heroConsensus.innerHTML = `
+      <div class="hero-consensus-vote ${voteClass(consensus)}">${tribunal ? consensus.toUpperCase() : "—"}</div>
+      <div class="hero-consensus-meta">
+        ${alignment != null ? `${(alignment * 100).toFixed(0)}% alignment` : "No votes yet"}
+        ${conflict ? '<span class="hero-conflict-pill">Split jury</span>' : ""}
+      </div>`;
+  }
+
+  if (els.heroVerdict) {
+    const labels = { long: "LONG", short: "SHORT", hold: "HOLD", close: "CLOSE" };
+    const action = decision?.action ?? "hold";
+    const conf = decision?.confidence;
+    const status = execution?.status;
+    els.heroVerdict.className = `hero-verdict ${actionClass(action)}`;
+    els.heroVerdict.innerHTML = `
+      <div class="hero-verdict-action">${labels[action] ?? action.toUpperCase()}</div>
+      <div class="hero-verdict-meta">
+        ${decision ? `${(conf * 100).toFixed(0)}% confidence` : "Awaiting decision"}
+        ${status ? `<span class="hero-status-pill status-${status}">${status}</span>` : ""}
+      </div>`;
+  }
+
+  if (els.tribunalHeroBadge) {
+    if (!tribunal) {
+      els.tribunalHeroBadge.textContent = "Idle";
+      els.tribunalHeroBadge.className = "tribunal-hero-badge";
+    } else if (tribunal.conflict) {
+      els.tribunalHeroBadge.textContent = "Split jury";
+      els.tribunalHeroBadge.className = "tribunal-hero-badge badge-conflict";
+    } else {
+      els.tribunalHeroBadge.textContent = `${(tribunal.alignment * 100).toFixed(0)}% aligned`;
+      els.tribunalHeroBadge.className = "tribunal-hero-badge badge-aligned";
+    }
+  }
+}
+
+function renderHeroSources() {
+  if (!els.heroSources || !meta?.dataSources) return;
+  els.heroSources.innerHTML = meta.dataSources
+    .map(
+      (s) => `
+      <span class="hero-source-chip kind-${s.kind}">
+        <span class="hero-source-dot"></span>
+        <strong>${s.label}</strong>
+        <span>${s.provider}</span>
+      </span>`
+    )
+    .join("");
+}
+
 function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = [], options = {}) {
   if (!latest) {
     renderSignalsCard(null);
@@ -1160,6 +1346,8 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
     renderPortfolioCard(portfolio, null);
     renderTribunal(null);
     renderTribunalJury(null);
+    renderTribunalHero(null, null, null);
+    renderVerdictBar(null, portfolio, null);
     setAgentState("idle", "Idle · waiting for cycle");
     void renderAgent(null, null, null, null, [], null);
     return;
@@ -1172,9 +1360,10 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
 
   if (market?.lastPrice) {
     const chg = market.change24hPct;
+    const symbolLabel = (latest.symbol ?? "BTC").replace("USDT", "");
     els.livePrice.innerHTML = `
       <span class="dot"></span>
-      <span>Live BTC <strong>$${market.lastPrice.toLocaleString()}</strong></span>
+      <span>Live ${symbolLabel} <strong>$${market.lastPrice.toLocaleString()}</strong></span>
       <span class="${chg >= 0 ? "pnl-pos" : "pnl-neg"}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}% 24h</span>
       <span class="stat-meta" style="margin:0">Bitget</span>`;
   }
@@ -1182,6 +1371,8 @@ function renderLatest(latest, portfolio, maxNotionalUsdt = 100, journalCycles = 
   renderSignalsCard(tribunal, regime);
   renderDecisionCard(decision, latest.execution, tribunal, maxNotionalUsdt);
   renderPortfolioCard(portfolio, market?.lastPrice ?? null);
+  renderTribunalHero(tribunal, decision, latest.execution);
+  renderVerdictBar(latest, portfolio, latest.symbol);
 
   if (tribunal) {
     els.conflictBadge.style.display = tribunal.conflict ? "inline-flex" : "none";
@@ -1423,7 +1614,7 @@ async function refresh(options = {}) {
 
 async function init() {
   setTheme(getTheme());
-  showWelcome();
+  showFirstLoadHint();
   renderPipeline();
   renderEmptyDashboard();
 
@@ -1432,16 +1623,58 @@ async function init() {
     if (meta.llm?.model) els.agentModel.textContent = meta.llm.model;
     renderPipeline();
     renderSources();
+    renderHeroSources();
   } catch {
     renderSources();
+    renderHeroSources();
   }
 
   try {
     await loadSettings();
     await refresh();
+    await maybeAutoRunFirstCycle();
   } catch (err) {
     showError(err.message || "Could not load dashboard. Run pnpm api first.");
     renderEmptyDashboard();
+  }
+}
+
+async function maybeAutoRunFirstCycle() {
+  try {
+    const status = await fetchJson("/api/status");
+    if (status.autopilot?.running) return;
+    if (sessionStorage.getItem("vector_autorun")) return;
+    if (lastChartData.latest) {
+      const last = new Date(lastChartData.latest.completedAt).getTime();
+      const ageMs = Date.now() - last;
+      if (ageMs < 30 * 60 * 1000) return;
+    }
+    sessionStorage.setItem("vector_autorun", "1");
+    await triggerCycle();
+  } catch {
+    // silent — auto-run is a nice-to-have
+  }
+}
+
+async function triggerCycle() {
+  if (els.runBtn?.disabled) return;
+  if (els.runBtn) els.runBtn.disabled = true;
+  clearError();
+  startCycleAnimation();
+  try {
+    await fetchJson("/api/cycle", { method: "POST" });
+    stopCycleAnimation();
+    await refresh();
+  } catch (err) {
+    stopCycleAnimation();
+    showError(err.message || "Cycle failed. Turn VPN on if Bitget is blocked.");
+  } finally {
+    try {
+      const ap = await fetchJson("/api/autopilot");
+      if (els.runBtn) els.runBtn.disabled = ap.running;
+    } catch {
+      if (els.runBtn) els.runBtn.disabled = false;
+    }
   }
 }
 
@@ -1457,26 +1690,8 @@ els.profileSelect.addEventListener("change", async () => {
   }
 });
 
-els.runBtn.addEventListener("click", async () => {
-  els.runBtn.disabled = true;
-  clearError();
-  startCycleAnimation();
-  try {
-    await fetchJson("/api/cycle", { method: "POST" });
-    stopCycleAnimation();
-    await refresh();
-  } catch (err) {
-    stopCycleAnimation();
-    showError(err.message || "Cycle failed. Turn VPN on if Bitget is blocked.");
-  } finally {
-    try {
-      const ap = await fetchJson("/api/autopilot");
-      els.runBtn.disabled = ap.running;
-    } catch {
-      els.runBtn.disabled = false;
-    }
-  }
-});
+els.runBtn.addEventListener("click", () => triggerCycle());
+els.dismissHint?.addEventListener("click", dismissFirstLoadHint);
 
 els.autopilotStartBtn.addEventListener("click", async () => {
   clearError();

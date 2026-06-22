@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div id="welcomeModal" class="modal-backdrop">
+    <div id="welcomeModal" class="modal-backdrop" hidden>
       <div class="modal">
         <div class="brand-logo-modal" aria-hidden="true"></div>
         <h2>Welcome to Vector</h2>
@@ -137,7 +137,49 @@
           </div>
         </header>
 
+        <div id="verdictBar" class="verdict-bar" data-action="hold">
+          <div class="verdict-bar-main">
+            <div class="verdict-bar-action">
+              <span class="verdict-bar-dot"></span>
+              <strong id="verdictBarAction">HOLD</strong>
+              <span class="verdict-bar-symbol" id="verdictBarSymbol">BTCUSDT</span>
+            </div>
+            <div class="verdict-bar-conf">
+              <span class="verdict-bar-label">Confidence</span>
+              <strong id="verdictBarConf">—</strong>
+            </div>
+            <div class="verdict-bar-stat">
+              <span class="verdict-bar-label">Equity</span>
+              <strong id="verdictBarEquity">$1,000</strong>
+            </div>
+            <div class="verdict-bar-stat">
+              <span class="verdict-bar-label">Cycles</span>
+              <strong id="verdictBarCycles">0</strong>
+            </div>
+            <div class="verdict-bar-stat">
+              <span class="verdict-bar-label">Win rate</span>
+              <strong id="verdictBarWinRate">—</strong>
+            </div>
+            <div class="verdict-bar-stat">
+              <span class="verdict-bar-label">Last cycle</span>
+              <strong id="verdictBarLast">—</strong>
+            </div>
+          </div>
+          <div id="verdictBarSignals" class="verdict-bar-signals" hidden></div>
+        </div>
+
         <div class="content">
+          <div id="firstLoadHint" class="first-load-hint" hidden>
+            <div class="hint-inner">
+              <span class="hint-pulse"></span>
+              <div class="hint-body">
+                <strong>What you're seeing</strong>
+                <span>Real Bitget prices · Exa news · DexScreener on-chain · Qwen reasoning. Paper wallet, dry-run only. A cycle runs ~30–50s.</span>
+              </div>
+              <button id="dismissHint" class="btn btn-ghost btn-sm" type="button" aria-label="Dismiss">Got it</button>
+            </div>
+          </div>
+
           <div id="livePrice" class="ticker">
             <span class="dot"></span>
             <span>Waiting for first cycle...</span>
@@ -145,21 +187,41 @@
 
           <div id="error" class="error-banner"></div>
 
-          <div class="stats-row">
-            <div class="card" id="cardSignals">
-              <div class="card-header">
-                <div>
-                  <h3 class="card-title">Active signals</h3>
-                  <div class="card-sub">Four channels voting</div>
-                </div>
-                <span class="badge badge-live">Live</span>
+          <section id="tribunalHero" class="tribunal-hero" aria-label="Signal tribunal flow">
+            <div class="tribunal-hero-head">
+              <div>
+                <span class="tribunal-hero-eyebrow">The thesis</span>
+                <h2 class="tribunal-hero-title">Signal Tribunal — 4 channels vote before Qwen</h2>
+                <p class="tribunal-hero-sub">Pre-LLM jury sees the data first. Qwen reconciles split votes instead of guessing from scratch.</p>
               </div>
-              <div id="signalsBody">
-                <div class="skeleton skeleton-lg"></div>
-                <div class="skeleton skeleton-sm"></div>
+              <div id="tribunalHeroBadge" class="tribunal-hero-badge">Idle</div>
+            </div>
+            <div class="tribunal-flow">
+              <div class="flow-stage flow-stage-jury">
+                <div class="flow-stage-label">Step 1 · Jury votes</div>
+                <div id="heroChannels" class="hero-channels"></div>
+              </div>
+              <div class="flow-arrow" aria-hidden="true">→</div>
+              <div class="flow-stage flow-stage-consensus">
+                <div class="flow-stage-label">Step 2 · Consensus</div>
+                <div id="heroConsensus" class="hero-consensus">
+                  <div class="hero-consensus-vote vote-neutral">—</div>
+                  <div class="hero-consensus-meta">Run a cycle</div>
+                </div>
+              </div>
+              <div class="flow-arrow" aria-hidden="true">→</div>
+              <div class="flow-stage flow-stage-verdict">
+                <div class="flow-stage-label">Step 3 · Qwen reconciles</div>
+                <div id="heroVerdict" class="hero-verdict action-hold">
+                  <div class="hero-verdict-action">HOLD</div>
+                  <div class="hero-verdict-meta">Awaiting decision</div>
+                </div>
               </div>
             </div>
+            <div id="heroSources" class="hero-sources"></div>
+          </section>
 
+          <div class="stats-row">
             <div class="card" id="cardDecision">
               <div class="card-header">
                 <div>
@@ -336,17 +398,8 @@
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Signal tribunal</h3>
-                <div id="profileMeta" class="card-sub">Channel votes and weights</div>
-              </div>
-              <span class="badge badge-live">Live</span>
-            </div>
-            <div id="weightBars" class="weight-bar"></div>
-            <div id="tribunal"></div>
-          </div>
+          <div id="profileMeta" class="profile-meta-strip">Channel votes and weights</div>
+          <div id="weightBars" class="weight-bar"></div>
 
           <div class="section-divider">
             <span>Operations</span>
@@ -432,7 +485,6 @@
             </form>
           </div>
 
-          <div id="sources" class="sources"></div>
         </div>
       </main>
     </div>
