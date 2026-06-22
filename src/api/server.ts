@@ -224,6 +224,104 @@ app.get("/api/journal", async (req, res) => {
   res.json({ count: journal.length, cycles: journal });
 });
 
+app.get("/api/export", async (_req, res) => {
+  const journal = await readJournal(500);
+  const portfolio = await getPaperPortfolio();
+  let prevEquity = portfolio.startingEquity;
+  const trades = [...journal].reverse().map((cycle) => {
+    const decision = cycle.riskVerdict?.adjustedDecision ?? cycle.rawDecision;
+    const equity = cycle.portfolio?.equity ?? prevEquity;
+    const balanceChange = Number((equity - prevEquity).toFixed(4));
+    prevEquity = equity;
+    return {
+      timestamp: cycle.completedAt,
+      tradingPair: cycle.symbol,
+      direction: decision.action,
+      price: cycle.perception?.market?.lastPrice ?? null,
+      notionalUsdt: decision.notionalUsdt,
+      leverage: decision.leverage,
+      accountBalance: equity,
+      balanceChange,
+      executionStatus: cycle.execution?.status ?? "unknown",
+      plan: cycle.agentContext?.plan ?? decision.plan ?? null,
+      reflection: cycle.agentContext?.reflection ?? null,
+      nextFocus: cycle.agentContext?.nextFocus ?? null,
+      cycleId: cycle.id,
+    };
+  });
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    agent: "Vector",
+    track: "Trading Agent",
+    mode: "paper / dry-run",
+    startingEquity: portfolio.startingEquity,
+    endingEquity: portfolio.equity,
+    totalCycles: trades.length,
+    trades,
+  };
+  res.setHeader(
+    "Content-Disposition",
+    'attachment; filename="vector-paper-trading-log.json"'
+  );
+  res.json(payload);
+});
+
+app.get("/api/performance", async (_req, res) => {
+  const journal = await readJournal(500);
+  const portfolio = await getPaperPortfolio();
+
+  const actionCounts = { long: 0, short: 0, hold: 0, close: 0 };
+  const statusCounts = { simulated: 0, executed: 0, skipped: 0, failed: 0 };
+  const pairCounts: Record<string, number> = {};
+  let confidenceSum = 0;
+  let confidenceN = 0;
+  let conflictCycles = 0;
+
+  for (const cycle of journal) {
+    const decision = cycle.riskVerdict?.adjustedDecision ?? cycle.rawDecision;
+    const action = (decision?.action ?? "hold") as keyof typeof actionCounts;
+    if (action in actionCounts) actionCounts[action] += 1;
+    const status = (cycle.execution?.status ?? "skipped") as keyof typeof statusCounts;
+    if (status in statusCounts) statusCounts[status] += 1;
+    pairCounts[cycle.symbol] = (pairCounts[cycle.symbol] ?? 0) + 1;
+    if (typeof decision?.confidence === "number") {
+      confidenceSum += decision.confidence;
+      confidenceN += 1;
+    }
+    if (cycle.tribunal?.conflict) conflictCycles += 1;
+  }
+
+  const equityCurve = portfolio.equityCurve ?? [];
+  let peak = portfolio.startingEquity;
+  let maxDrawdown = 0;
+  for (const point of equityCurve) {
+    if (point.equity > peak) peak = point.equity;
+    const drawdown = peak > 0 ? (peak - point.equity) / peak : 0;
+    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+  }
+
+  res.json({
+    totalCycles: journal.length,
+    actionCounts,
+    statusCounts,
+    pairCounts,
+    averageConfidence: confidenceN > 0 ? Number((confidenceSum / confidenceN).toFixed(3)) : null,
+    conflictCycles,
+    conflictRate: journal.length > 0 ? Number((conflictCycles / journal.length).toFixed(3)) : 0,
+    portfolio: {
+      startingEquity: portfolio.startingEquity,
+      equity: portfolio.equity,
+      realizedPnl: portfolio.realizedPnl,
+      unrealizedPnl: portfolio.unrealizedPnl,
+      totalTrades: portfolio.totalTrades,
+      winRate: portfolio.winRate,
+      wins: portfolio.wins,
+      losses: portfolio.losses,
+      maxDrawdownPct: Number((maxDrawdown * 100).toFixed(2)),
+    },
+  });
+});
+
 let manualCycleInFlight = false;
 
 app.post("/api/cycle", async (_req, res) => {

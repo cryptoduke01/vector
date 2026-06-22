@@ -71,6 +71,10 @@ const els = {
   saveSettingsBtn: document.getElementById("saveSettingsBtn"),
   navAutopilot: document.getElementById("navAutopilot"),
   navSettings: document.getElementById("navSettings"),
+  settingProfile: document.getElementById("settingProfile"),
+  performanceBody: document.getElementById("performanceBody"),
+  perfCycleCount: document.getElementById("perfCycleCount"),
+  journalExportLink: document.getElementById("journalExportLink"),
   verdictBar: document.getElementById("verdictBar"),
   verdictBarAction: document.getElementById("verdictBarAction"),
   verdictBarSymbol: document.getElementById("verdictBarSymbol"),
@@ -656,7 +660,7 @@ function renderPipeline(activeIndex = -1, allDone = false) {
 }
 
 function renderSources() {
-  if (!meta?.dataSources) return;
+  if (!els.sources || !meta?.dataSources) return;
   els.sources.innerHTML = meta.dataSources
     .map(
       (s) => `
@@ -1455,6 +1459,7 @@ function fillSettingsForm(settings, hint) {
   els.settingNotional.value = String(settings.maxNotionalUsdt);
   els.settingLeverage.value = String(settings.maxLeverage);
   els.settingDryRun.checked = settings.dryRun;
+  if (els.settingProfile) els.settingProfile.value = activeProfileId;
   if (hint) {
     els.settingsHint.textContent = hasBitgetAuth
       ? "Bitget API keys detected in server .env. You can disable dry run for live orders."
@@ -1596,6 +1601,7 @@ async function refresh(options = {}) {
   profiles = status.profiles ?? [];
   activeProfileId = status.activeProfileId ?? "balanced";
   renderProfiles();
+  if (els.settingProfile) els.settingProfile.value = activeProfileId;
 
   els.modeBadge.textContent = status.dryRun ? "Dry run" : "Live";
   els.modeBadge.className = `badge ${status.dryRun ? "badge-dry" : "badge-live"}`;
@@ -1611,6 +1617,104 @@ async function refresh(options = {}) {
     maxNotionalUsdt: status.maxNotionalUsdt ?? 100,
   };
   renderCharts(lastChartData.portfolio, lastChartData.cycles, lastChartData.latest);
+  void loadPerformance();
+}
+
+async function loadPerformance() {
+  if (!els.performanceBody) return;
+  try {
+    const perf = await fetchJson("/api/performance");
+    renderPerformance(perf);
+  } catch {
+    // performance is non-critical — leave existing render in place
+  }
+}
+
+function renderPerformance(perf) {
+  if (!els.performanceBody) return;
+  const { totalCycles, actionCounts, statusCounts, pairCounts, averageConfidence, conflictRate, portfolio } = perf;
+
+  if (els.perfCycleCount) els.perfCycleCount.textContent = `${totalCycles} cycles`;
+
+  if (!totalCycles) {
+    els.performanceBody.innerHTML = '<p class="stat-meta">No cycles logged yet. Run one to populate.</p>';
+    return;
+  }
+
+  const actionTotal = Math.max(1, actionCounts.long + actionCounts.short + actionCounts.hold + actionCounts.close);
+  const longPct = (actionCounts.long / actionTotal) * 100;
+  const shortPct = (actionCounts.short / actionTotal) * 100;
+  const holdPct = (actionCounts.hold / actionTotal) * 100;
+  const closePct = (actionCounts.close / actionTotal) * 100;
+
+  const pairs = Object.entries(pairCounts ?? {}).sort((a, b) => b[1] - a[1]);
+
+  const avgConfText = averageConfidence != null ? `${(averageConfidence * 100).toFixed(0)}%` : "—";
+  const conflictText = `${(conflictRate * 100).toFixed(0)}%`;
+  const winRate = portfolio.totalTrades ? `${(portfolio.winRate * 100).toFixed(0)}%` : "—";
+  const drawdown = `${portfolio.maxDrawdownPct.toFixed(2)}%`;
+
+  els.performanceBody.innerHTML = `
+    <div class="perf-stat-grid">
+      <div class="perf-stat">
+        <span class="perf-stat-label">Total cycles</span>
+        <strong>${totalCycles}</strong>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-label">Avg confidence</span>
+        <strong>${avgConfText}</strong>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-label">Conflict rate</span>
+        <strong>${conflictText}</strong>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-label">Win rate</span>
+        <strong>${winRate}</strong>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-label">Max drawdown</span>
+        <strong>${drawdown}</strong>
+      </div>
+      <div class="perf-stat">
+        <span class="perf-stat-label">Trades / W / L</span>
+        <strong>${portfolio.totalTrades} · ${portfolio.wins}W / ${portfolio.losses}L</strong>
+      </div>
+    </div>
+    <div class="perf-section">
+      <div class="perf-section-head">
+        <span>Action mix</span>
+        <span class="stat-meta">Long ${actionCounts.long} · Short ${actionCounts.short} · Hold ${actionCounts.hold} · Close ${actionCounts.close}</span>
+      </div>
+      <div class="perf-action-bar">
+        <span class="perf-action-segment seg-long" style="width:${longPct}%" title="Long ${actionCounts.long}"></span>
+        <span class="perf-action-segment seg-short" style="width:${shortPct}%" title="Short ${actionCounts.short}"></span>
+        <span class="perf-action-segment seg-hold" style="width:${holdPct}%" title="Hold ${actionCounts.hold}"></span>
+        <span class="perf-action-segment seg-close" style="width:${closePct}%" title="Close ${actionCounts.close}"></span>
+      </div>
+    </div>
+    ${pairs.length ? `
+    <div class="perf-section">
+      <div class="perf-section-head">
+        <span>By pair</span>
+        <span class="stat-meta">${pairs.length} symbols traded</span>
+      </div>
+      <div class="perf-chips">
+        ${pairs.map(([sym, count]) => `<span class="perf-chip"><strong>${sym}</strong><span>${count}</span></span>`).join("")}
+      </div>
+    </div>` : ""}
+    <div class="perf-section">
+      <div class="perf-section-head">
+        <span>Execution status</span>
+        <span class="stat-meta">${statusCounts.simulated + statusCounts.executed} traded · ${statusCounts.skipped} held · ${statusCounts.failed} failed</span>
+      </div>
+      <div class="perf-chips">
+        <span class="perf-chip"><strong>Simulated</strong><span>${statusCounts.simulated}</span></span>
+        <span class="perf-chip"><strong>Executed</strong><span>${statusCounts.executed}</span></span>
+        <span class="perf-chip"><strong>Skipped</strong><span>${statusCounts.skipped}</span></span>
+        <span class="perf-chip"><strong>Failed</strong><span>${statusCounts.failed}</span></span>
+      </div>
+    </div>`;
 }
 
 async function init() {
@@ -1633,10 +1737,19 @@ async function init() {
   try {
     await loadSettings();
     await refresh();
-    await maybeAutoRunFirstCycle();
   } catch (err) {
     showError(err.message || "Could not load dashboard. Run pnpm api first.");
     renderEmptyDashboard();
+  }
+  try {
+    await maybeAutoRunFirstCycle();
+  } catch {
+    // auto-run is a nice-to-have
+  }
+  try {
+    await loadPerformance();
+  } catch {
+    // performance is non-critical
   }
 }
 
@@ -1736,6 +1849,12 @@ els.settingsForm.addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+
+    if (els.settingProfile && els.settingProfile.value && els.settingProfile.value !== activeProfileId) {
+      await fetchJson(`/api/profiles/${els.settingProfile.value}`, { method: "POST" });
+      activeProfileId = els.settingProfile.value;
+    }
+
     fillSettingsForm(data.settings);
     await refresh();
   } catch (err) {
@@ -1744,6 +1863,11 @@ els.settingsForm.addEventListener("submit", async (e) => {
     els.saveSettingsBtn.disabled = false;
   }
 });
+
+if (els.journalExportLink) {
+  els.journalExportLink.href = "/api/export";
+  els.journalExportLink.textContent = "Download log";
+}
 
 els.startBtn.addEventListener("click", closeWelcome);
 els.skipWelcome.addEventListener("click", closeWelcome);

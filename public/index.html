@@ -397,6 +397,19 @@
           <div id="profileMeta" class="profile-meta-strip">Channel votes and weights</div>
           <div id="weightBars" class="weight-bar"></div>
 
+          <div id="performanceCard" class="card performance-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Performance</h3>
+                <div class="card-sub">Action mix, drawdown, and conflict rate across all cycles</div>
+              </div>
+              <span id="perfCycleCount" class="badge badge-live">0 cycles</span>
+            </div>
+            <div id="performanceBody" class="performance-grid">
+              <p class="stat-meta">Loading performance data…</p>
+            </div>
+          </div>
+
           <div class="section-divider">
             <span>Operations</span>
           </div>
@@ -458,6 +471,15 @@
                   <option value="DOGEUSDT">DOGE / USDT</option>
                   <option value="AVAXUSDT">AVAX / USDT</option>
                   <option value="LINKUSDT">LINK / USDT</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Strategy profile</span>
+                <select id="settingProfile">
+                  <option value="balanced">Balanced (equal weights)</option>
+                  <option value="momentum">Momentum (heavy on technicals)</option>
+                  <option value="contrarian">Contrarian (funding + news)</option>
+                  <option value="sol-alpha">SOL Alpha (on-chain heavy)</option>
                 </select>
               </label>
               <label class="field">
