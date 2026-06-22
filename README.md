@@ -2,6 +2,8 @@
 
 **Signal Tribunal trading agent** for [Bitget AI Hackathon S1](https://www.bitget.com/campaigns/d8a2a61fd63c4bc2a3c8198ec923da9a).
 
+**Live demo:** https://vector-demo-qzdb.onrender.com/
+
 Not another black-box bot. Vector runs **4 independent signal channels** that vote before Qwen ever decides — then reconciles conflicts, sizes by regime, and logs paper PnL.
 
 ## What makes Vector different
@@ -37,7 +39,7 @@ pnpm api            # demo dashboard on http://localhost:4100
 
 ### Demo dashboard
 
-Open **http://localhost:4100** — judges can see latest action, reasoning, Solana signal, and audit journal. Click **Run cycle** to trigger live.
+Open the **[live demo](https://vector-demo-qzdb.onrender.com/)** or run locally at **http://localhost:4100** — judges can see latest action, reasoning, Solana signal, and audit journal. Click **Run cycle** to trigger live.
 
 ### API
 

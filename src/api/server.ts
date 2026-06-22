@@ -224,6 +224,8 @@ app.get("/api/journal", async (req, res) => {
   res.json({ count: journal.length, cycles: journal });
 });
 
+let manualCycleInFlight = false;
+
 app.post("/api/cycle", async (_req, res) => {
   const autopilot = getAutopilotState();
   if (autopilot.running) {
@@ -233,14 +235,22 @@ app.post("/api/cycle", async (_req, res) => {
     });
     return;
   }
-  if (isCycleInFlight()) {
+  if (isCycleInFlight() || manualCycleInFlight) {
     res.status(409).json({ ok: false, error: "Cycle already in progress" });
     return;
   }
 
-  const settings = await getSettings();
-  const record = await runAgentCycle(settings.symbol);
-  res.json(record);
+  manualCycleInFlight = true;
+  try {
+    const settings = await getSettings();
+    const record = await runAgentCycle(settings.symbol);
+    res.json(record);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Cycle failed";
+    res.status(500).json({ ok: false, error: message });
+  } finally {
+    manualCycleInFlight = false;
+  }
 });
 
 app.use(express.static(publicDir));

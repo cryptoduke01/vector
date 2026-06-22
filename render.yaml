@@ -18,7 +18,7 @@ services:
       - key: LLM_BASE_URL
         value: https://hackathon.bitgetops.com/v1
       - key: LLM_MODEL
-        value: qwen3.6-flash
+        value: qwen3.6-plus
       - key: BITGET_API_BASE_URL
         value: https://api.bitget.com
       - key: SIGNAL_PROFILE

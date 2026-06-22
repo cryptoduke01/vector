@@ -1,11 +1,11 @@
 {
-  "exportedAt": "2026-06-18T10:33:14.896Z",
+  "exportedAt": "2026-06-22T11:25:04.439Z",
   "agent": "Vector",
   "track": "Trading Agent",
   "mode": "paper / dry-run",
   "startingEquity": 1000,
-  "endingEquity": 1000.189077911153,
-  "totalCycles": 26,
+  "endingEquity": 996.6721,
+  "totalCycles": 28,
   "trades": [
     {
       "timestamp": "2026-06-05T12:53:46.175Z",
@@ -17,6 +17,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "77bdf347-6ebb-44f5-b560-4b992c7980b6"
     },
     {
@@ -29,6 +32,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "8eec9433-ba3e-490b-b656-2ff718391473"
     },
     {
@@ -41,6 +47,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "a2363788-f9ef-4a43-9d19-81d9641fabc1"
     },
     {
@@ -53,6 +62,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "25f09e60-7648-464a-8d86-35405c29b017"
     },
     {
@@ -65,6 +77,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "24b1d51f-22ac-49a4-a905-4343d82ed9e3"
     },
     {
@@ -77,6 +92,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "028f98be-7bcf-46a7-aafb-0cea5a30ce20"
     },
     {
@@ -89,6 +107,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "00bcfaff-1718-414a-b354-ded44f7a5eaf"
     },
     {
@@ -101,6 +122,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "91ab0eb6-3f84-4a67-9fe9-269100487163"
     },
     {
@@ -113,6 +137,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "c2aea240-d840-404b-80c8-89de379b3280"
     },
     {
@@ -125,6 +152,9 @@
       "accountBalance": 1000,
       "balanceChange": 0,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "4d5e2e16-6b9d-4dc1-91a4-51a784cbdc3c"
     },
     {
@@ -137,6 +167,9 @@
       "accountBalance": 1000.11839721877,
       "balanceChange": 0.1184,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "fcb29b36-5203-4f63-b080-57eae458fb3c"
     },
     {
@@ -149,6 +182,9 @@
       "accountBalance": 999.9579140773093,
       "balanceChange": -0.1605,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "e2674237-3cc4-43fe-bad8-72b7786915e5"
     },
     {
@@ -161,6 +197,9 @@
       "accountBalance": 1074.8785857373973,
       "balanceChange": 74.9207,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "8ce76765-4925-4b81-9dea-e9449665258d"
     },
     {
@@ -173,6 +212,9 @@
       "accountBalance": 1074.878730652697,
       "balanceChange": 0.0001,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "94df98f6-c4dc-4f8f-9f39-6721eb154bc6"
     },
     {
@@ -185,6 +227,9 @@
       "accountBalance": 1074.8789876033543,
       "balanceChange": 0.0003,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "ed3c1e18-7694-4cda-887d-b6d489395431"
     },
     {
@@ -197,6 +242,9 @@
       "accountBalance": 1074.8789742078225,
       "balanceChange": 0,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "84879ccc-cabc-4125-8f72-1ddcb2eb307a"
     },
     {
@@ -209,6 +257,9 @@
       "accountBalance": 1074.879802295249,
       "balanceChange": 0.0008,
       "executionStatus": "skipped",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "dd2b407b-7f61-4637-b41e-9aea07107fdc"
     },
     {
@@ -221,6 +272,9 @@
       "accountBalance": 1000.369400461766,
       "balanceChange": -74.5104,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "d73bfdfb-c775-4402-b534-b0725a6ee6f6"
     },
     {
@@ -233,6 +287,9 @@
       "accountBalance": 1000.2654327753409,
       "balanceChange": -0.104,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "1af32388-bcdb-48ba-884f-5a6307a7ba0a"
     },
     {
@@ -245,6 +302,9 @@
       "accountBalance": 1000.2703243933903,
       "balanceChange": 0.0049,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "ead6d2dc-a279-4218-80b4-f249c5f30da4"
     },
     {
@@ -257,6 +317,9 @@
       "accountBalance": 1000.3057909374323,
       "balanceChange": 0.0355,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "c4ce278f-9262-4fb5-b297-31ea793929f6"
     },
     {
@@ -269,6 +332,9 @@
       "accountBalance": 1000.3672953650986,
       "balanceChange": 0.0615,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "bd51c078-4f9a-469b-9def-1fb70d9be0e3"
     },
     {
@@ -281,6 +347,9 @@
       "accountBalance": 1000.3639468408994,
       "balanceChange": -0.0033,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "95b49ee2-28ad-4a24-b001-6493f9bc1388"
     },
     {
@@ -293,6 +362,9 @@
       "accountBalance": 1000.3572829073166,
       "balanceChange": -0.0067,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "6950f5fa-f2f6-4e37-87cd-0cb1e5cf68a3"
     },
     {
@@ -305,6 +377,9 @@
       "accountBalance": 1000.2736232099777,
       "balanceChange": -0.0837,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "5f2e0d10-c050-45fc-bc5c-6c8ff7c39958"
     },
     {
@@ -317,7 +392,40 @@
       "accountBalance": 1000.189077911153,
       "balanceChange": -0.0845,
       "executionStatus": "simulated",
+      "plan": null,
+      "reflection": null,
+      "nextFocus": null,
       "cycleId": "f0f88bc8-c42d-40b4-93c7-7072dbe4a89c"
+    },
+    {
+      "timestamp": "2026-06-22T11:20:47.770Z",
+      "tradingPair": "BTCUSDT",
+      "direction": "hold",
+      "price": 64245.3,
+      "notionalUsdt": 0,
+      "leverage": 1,
+      "accountBalance": 996.6721161919396,
+      "balanceChange": -3.517,
+      "executionStatus": "skipped",
+      "plan": "Maintain flat exposure while the market consolidates in a low-volatility range, awaiting clearer directional confirmation before re-entering.",
+      "reflection": "Cycle complete: HOLD on BTCUSDT at $64,245.3. Open short $75 from $61,367.6. Paper equity $996.67.",
+      "nextFocus": "Wait for tribunal alignment before sizing up.",
+      "cycleId": "58a62475-dfc8-4b66-940c-6c169f689042"
+    },
+    {
+      "timestamp": "2026-06-22T11:24:50.123Z",
+      "tradingPair": "BTCUSDT",
+      "direction": "hold",
+      "price": 64237.3,
+      "notionalUsdt": 0,
+      "leverage": 1,
+      "accountBalance": 996.6721,
+      "balanceChange": 0,
+      "executionStatus": "skipped",
+      "plan": "Maintain a neutral stance in the low-volatility range, awaiting clearer directional signals before committing capital.",
+      "reflection": "I maintained a hold through a ranging regime with moderate confidence, but execution was skipped due to tribunal conflict flags that exposed misaligned signal weightings. This reinforced that even passive stances require strict internal alignment to prevent hidden friction and equity erosion.",
+      "nextFocus": "Reconcile conflicting tribunal signals by recalibrating feature weights before re-evaluating breakout thresholds.",
+      "cycleId": "7f955e6e-d071-4d34-925f-1ac36244fc57"
     }
   ]
 }

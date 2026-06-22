@@ -14,8 +14,8 @@
 | Public GitHub repo | Done | https://github.com/cryptoduke01/vector |
 | README with run instructions | Done | `pnpm api` in README |
 | Working agent loop | Done | perceive → tribunal → Qwen → risk → execute → journal |
-| Paper trading log (required) | Ready locally | Export + push `submissions/paper-trading-log.json` |
-| **Public demo URL** | **Not live yet** | Deploy Render Blueprint today |
+| Paper trading log (required) | Ready | `submissions/paper-trading-log.json` (28 cycles, dry-run, full audit trail) |
+| **Public demo URL** | Done | https://vector-demo-qzdb.onrender.com/ |
 | Bitget UID matches registration | You verify | Same UID on form |
 | Four-part project description | Below | Copy into form |
 | Demo video (optional, recommended) | Script below | Record after Render is live |
@@ -98,9 +98,9 @@ End-to-end autonomous loop on Bitget USDT perpetuals via `bitget-core`:
 
 **Perceive** (Bitget market + Exa news + DexScreener) → **Tribunal** (weighted votes) → **Qwen decide** (hackathon API) → **Risk guard** → **Execute** (dry-run sim or live) → **Journal** (audit trail + paper wallet).
 
-Public dashboard: live signals, AI decision, paper PnL chart, position view, autopilot mode, and cycle history. 26+ paper cycles logged with timestamp, pair, direction, price, notional, and balance change.
+Public dashboard: live signals, AI decision, paper PnL chart, position view, autopilot mode, and cycle history. 28 paper cycles logged with timestamp, pair, direction, price, notional, and balance change.
 
-**Bitget stack:** Agent Hub / bitget-core, hackathon Qwen (`qwen3.6-flash`), sim trading per official rules.
+**Bitget stack:** Agent Hub / bitget-core, hackathon Qwen (`qwen3.6-plus`), sim trading per official rules.
 
 ### Part 4 — Your take on AI trading (optional)
 
@@ -188,7 +188,8 @@ Your gaps to close **today**:
 
 ## Quick links
 
+- **Live demo:** https://vector-demo-qzdb.onrender.com/
 - Repo: https://github.com/cryptoduke01/vector
 - Submit: https://forms.gle/CEGB6fRtuobD3bCj8
 - Hackathon docs: https://bitget-ai.gitbook.io/hackathon
-- Paper log (after push): https://github.com/cryptoduke01/vector/blob/main/submissions/paper-trading-log.json
+- Paper log: https://github.com/cryptoduke01/vector/blob/main/submissions/paper-trading-log.json
